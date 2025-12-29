@@ -413,14 +413,6 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "mw00olotg5h9z3nsmo2wo",
-      "source": "b5e93ab34754",
-      "target": "5427409afb20",
-      "label": "下落不明的兒子",
-      "description": "下落不明的兒子，但並不在乎。",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "2d3b04jffb6xmubpxkkzx",
       "source": "80b39e66ca5c",
       "target": "36502926f6ae",
@@ -445,14 +437,6 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "ktwp001aa8pqdiiufbrzqm",
-      "source": "3e5ac23d6fee",
-      "target": "5427409afb20",
-      "label": "救援者與被救者",
-      "description": "救援者與被救者；出於良知的選擇",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "jq4q5ao92gli5y5mcsvmg",
       "source": "3e5ac23d6fee",
       "target": "b38923b3d3ed",
@@ -466,14 +450,6 @@
       "target": "1987583ac7ec",
       "label": "受義兄遺託保護",
       "description": "受義兄遺託保護，並邀請加入月華組。",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "kbv1abxjlyj97p2v1jox5",
-      "source": "f608774fa988",
-      "target": "5427409afb20",
-      "label": "絕對忠誠的私人士兵",
-      "description": "絕對忠誠的私人士兵，最尊敬的人",
       "arrowStyle": "arrow"
     },
     {
@@ -514,86 +490,6 @@
       "target": "f608774fa988",
       "label": "交好之盟友",
       "description": "交好之盟友，能快速協同處置事件",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "8zcmm2f63rugw31k3ug0w7",
-      "source": "b38923b3d3ed",
-      "target": "5427409afb20",
-      "label": "養成者與指揮者",
-      "description": "養成者與指揮者；不知道路西恩是他哥哥，只以為是恩人。",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "i3t7y6fp9pcmj10b899cjb",
-      "source": "b38923b3d3ed",
-      "target": "f608774fa988",
-      "label": "任務搭檔與現場指揮",
-      "description": "任務搭檔與現場指揮，互補默契漸成",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "7xtilyvldkb59jqeytgvmj",
-      "source": "b38923b3d3ed",
-      "target": "6b77aca76c61",
-      "label": "從旁守望",
-      "description": "從旁守望，行動優先的實際支援",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "a8178cdnogelfsuuh7hx",
-      "source": "b38923b3d3ed",
-      "target": "8635cd035e37",
-      "label": "殺害安的仇恨對象",
-      "description": "殺害安的仇恨對象，但不知道對方是誰、不知道名字也不知道身在何處，甚至因為衝擊太大記憶也很模糊。",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "ng6z8v812hkgzfnlhl53g",
-      "source": "5427409afb20",
-      "target": "f608774fa988",
-      "label": "絕對忠誠的私人士兵",
-      "description": "絕對忠誠的私人士兵，直屬部下",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "xdtnb5uypoq4vgrygrrsfr",
-      "source": "5427409afb20",
-      "target": "b38923b3d3ed",
-      "label": "表面特別重視的「銀狼」",
-      "description": "表面特別重視的「銀狼」，實則同母異父弟弟",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "5hh4ce2ujyddfz4q56pl8j",
-      "source": "6b77aca76c61",
-      "target": "f608774fa988",
-      "label": "伯樂與朋友",
-      "description": "伯樂與朋友，現已重修舊好",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "1bffm7cusrdu925e2nxz",
-      "source": "6b77aca76c61",
-      "target": "3505f8f7462d",
-      "label": "友好的同事",
-      "description": "友好的同事",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "ki00hgbpv1cu86uzgxzgeh",
-      "source": "8635cd035e37",
-      "target": "5427409afb20",
-      "label": "認知名稱為實驗體Ψ",
-      "description": "認知名稱為實驗體Ψ。追殺、仇恨，因為路西恩的妨礙而找不到西奧多（實驗體Ω）。",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "3l61a5i944d4wglq2ckwx4",
-      "source": "8635cd035e37",
-      "target": "b38923b3d3ed",
-      "label": "認知名稱為實驗體Ω",
-      "description": "認知名稱為實驗體Ω，奉芙瑞妲的命令尋找。",
       "arrowStyle": "arrow"
     },
     {
@@ -698,22 +594,6 @@
       "target": "dbea6aecc7b3",
       "label": "屬下",
       "description": "受貝爾納多指使，在卡迪久家族地盤的夜店擴散毒品",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "062bea393ff5",
-      "source": "ff1694de6fb6",
-      "target": "b38923b3d3ed",
-      "label": "不打不相識",
-      "description": "不打不相識。初次見面時態度惡劣，甚至因被無視而翻桌，後因西奧多展現的實力與態度而有所轉變（或保持孽緣）。",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "ccf4f91d949a",
-      "source": "46e02b16381e",
-      "target": "b38923b3d3ed",
-      "label": "客人",
-      "description": "客人。",
       "arrowStyle": "arrow"
     },
     {
@@ -905,7 +785,7 @@
       "source": "dbea6aecc7b3",
       "target": "e50de9692a76",
       "label": "失望",
-      "description": "昔日心腹；對其轉型路線失望而決裂",
+      "description": "昔日心腹；對其轉型路線���望而決裂",
       "arrowStyle": "arrow"
     },
     {
@@ -930,14 +810,6 @@
       "target": "f608774fa988",
       "label": "妹妹好友",
       "description": "",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "9bca1532-d425-4106-989b-07cfa61c1d88",
-      "source": "b38923b3d3ed",
-      "target": "83c21f40f1aa",
-      "label": "喪生的青梅竹馬",
-      "description": "血月之夜喪生的青梅竹馬，兩人曾互許終身。",
       "arrowStyle": "arrow"
     },
     {
@@ -1149,27 +1021,11 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "b1efa8737a2c",
-      "source": "1a4889cddbd5",
-      "target": "b38923b3d3ed",
-      "label": "試圖拉攏的對象",
-      "description": "試圖拉攏的對象（稱其為獵犬）",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "cc6c558a96a5",
       "source": "1a4889cddbd5",
       "target": "6b77aca76c61",
       "label": "潛規則對象",
       "description": "潛規則對象（視為有價值的商品）",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "506dc71b1f8b",
-      "source": "36502926f6ae",
-      "target": "c5c6abfed105",
-      "label": "值得信賴的二當家",
-      "description": "值得信賴的二當家。",
       "arrowStyle": "arrow"
     },
     {
@@ -1205,14 +1061,6 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "132fd83446b7",
-      "source": "c5c6abfed105",
-      "target": "b38923b3d3ed",
-      "label": "初次見面即試探其深淺",
-      "description": "初次見面即試探其深淺，雖然拒絕其請求但對其敏銳度表示讚賞",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "272899ab9c42",
       "source": "5b0ba53871bb",
       "target": "c5c6abfed105",
@@ -1234,14 +1082,6 @@
       "target": "5b0ba53871bb",
       "label": "姊妹",
       "description": "姊妹（分家與本家），仇恨且意圖取代的對象。亦是其影武者的本尊。",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "46700bdaa315",
-      "source": "3505f8f7462d",
-      "target": "1a4889cddbd5",
-      "label": "關愛下屬的好老闆",
-      "description": "關愛下屬的好老闆（是誤會）",
       "arrowStyle": "arrow"
     },
     {
@@ -1269,19 +1109,147 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "f6b08e3f-73f0-44e8-b3c5-f666327088eb",
-      "source": "640afe95cf4c",
-      "target": "1a4889cddbd5",
-      "label": "恐懼",
-      "description": "天堂之門製作人／HL公司高層，長期虐待控制者，她曾想刺殺的仇恨對象",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "fefac5b6-b392-46bc-bc6f-c9456ee05062",
       "source": "1a4889cddbd5",
       "target": "640afe95cf4c",
       "label": "加害",
       "description": "旗下藝人/受害者（長期利用與施暴）",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "0195f49d-5f4f-43c4-be0b-74e79a9c5d0d",
+      "source": "3505f8f7462d",
+      "target": "1a4889cddbd5",
+      "label": "好老闆",
+      "description": "關愛下屬的好老闆（是誤會）",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "5c34fe91-9163-4157-9682-86cc469524d7",
+      "source": "b5e93ab34754",
+      "target": "5427409afb20",
+      "label": "父子關係",
+      "description": "下落不明的兒子，但並不在乎。",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "ec527f7e-a15b-4081-9595-7578a7310db3",
+      "source": "3e5ac23d6fee",
+      "target": "5427409afb20",
+      "label": "救援",
+      "description": "救援者與被救者；出於良知與同情的選擇",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "b8e719fb-12cc-4648-806e-8ddc38c6b848",
+      "source": "8635cd035e37",
+      "target": "5427409afb20",
+      "label": "尋找Ψ",
+      "description": "認知名稱為實驗體Ψ。追殺、仇恨，因為路西恩的妨礙而找不到西奧多（實驗體Ω）。",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "534defd1-6114-4e7e-967f-c425d1524687",
+      "source": "8635cd035e37",
+      "target": "b38923b3d3ed",
+      "label": "尋找Ω",
+      "description": "認知名稱為實驗體Ω，奉芙瑞妲的命令尋找。",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "342b3307-922d-4fac-a0f1-08ca607ec641",
+      "source": "5427409afb20",
+      "target": "b38923b3d3ed",
+      "label": "特殊關照",
+      "description": "表面特別重視的「銀狼」，實則同母異父弟弟",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "054ad3d1-a278-46c5-b001-7098f317d71a",
+      "source": "5427409afb20",
+      "target": "f608774fa988",
+      "label": "利用",
+      "description": "絕對忠誠的私人士兵，直屬部下",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "175e448d-a2e5-4d17-9286-67e4711c6d4b",
+      "source": "f608774fa988",
+      "target": "5427409afb20",
+      "label": "忠誠",
+      "description": "絕對忠誠的私人士兵，最尊敬的人",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "a52fe628-986d-47db-848c-6080694ecc05",
+      "source": "b38923b3d3ed",
+      "target": "5427409afb20",
+      "label": "恩人",
+      "description": "養成者與指揮者；不知道路西恩是他哥哥，只以為是恩人。",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "48c0ed3ac4d1",
+      "source": "3e5ac23d6fee",
+      "target": "5427409afb20",
+      "label": "救援者與被救者",
+      "description": "救援者與被救者；出於良知的選擇",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "b9f9d640-271d-4bb5-aa33-b17893cf7985",
+      "source": "1a4889cddbd5",
+      "target": "b38923b3d3ed",
+      "label": "試圖拉攏",
+      "description": "試圖拉攏的對象（稱其為獵犬）",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "ad5ccddb-f944-47e5-8752-ee9eeab5bf98",
+      "source": "6b77aca76c61",
+      "target": "f608774fa988",
+      "label": "報恩",
+      "description": "伯樂與朋友，在貝斯控制時遠離，現已重修舊好。抱著報恩心態",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "c5120919-b8ba-4003-ae96-015eb8791e82",
+      "source": "6b77aca76c61",
+      "target": "3505f8f7462d",
+      "label": "友好",
+      "description": "友好的同事",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "9e183cfe-a7e7-4bd0-b7af-e574fc858281",
+      "source": "b38923b3d3ed",
+      "target": "f608774fa988",
+      "label": "搭檔",
+      "description": "任務搭檔與現場指揮，互補默契漸成",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "68d5c96b-2190-4064-b663-69291dd6b669",
+      "source": "b38923b3d3ed",
+      "target": "8635cd035e37",
+      "label": "尋找",
+      "description": "殺害安的仇恨對象，但不知道對方是誰、不知道名字也不知道身在何處，甚至因為衝擊太大記憶也很模糊。",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "5d0a26fa-6743-49f9-bf30-405b9761704f",
+      "source": "b38923b3d3ed",
+      "target": "83c21f40f1aa",
+      "label": "青梅竹馬",
+      "description": "血月之夜喪生的青梅竹馬，兩人曾互許終身。",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "279099c8-cf13-4feb-a058-516a1130d135",
+      "source": "36502926f6ae",
+      "target": "c5c6abfed105",
+      "label": "信賴",
+      "description": "值得信賴的二當家。",
       "arrowStyle": "arrow"
     }
   ],
@@ -1401,7 +1369,7 @@
     {
       "id": "186385ca8d21",
       "characterId": "fb169b04a3bf",
-      "imageDataUrl": "/character_images/fb169b04a3bf_c722bd65-e7d8-4f52-a39e-4ec9d1182de6.jpg",
+      "imageDataUrl": "character_images/fb169b04a3bf_c722bd65-e7d8-4f52-a39e-4ec9d1182de6.jpg",
       "tagIds": [],
       "notes": "Imported from c722bd65-e7d8-4f52-a39e-4ec9d1182de6.jpg"
     },
@@ -1603,13 +1571,6 @@
       "imageDataUrl": "/character_images/672a1c02-d6dc-49ae-96d4-3a94aad5380a.jpg",
       "tagIds": [],
       "notes": ""
-    },
-    {
-      "id": "2634bd6c-772f-42b7-a76f-205fed60f959",
-      "characterId": "fb169b04a3bf",
-      "imageDataUrl": "/character_images/c722bd65-e7d8-4f52-a39e-4ec9d1182de6.jpg",
-      "tagIds": [],
-      "notes": ""
     }
   ],
   "tagCategories": [
@@ -1798,7 +1759,28 @@
     "a67d4620-7389-4725-bec3-92d4ea569cab",
     "6qqddcje8oyut5f80bo2s",
     "283ce2d6a0ff",
-    "c49c50cd7bb3"
+    "c49c50cd7bb3",
+    "46700bdaa315",
+    "mw00olotg5h9z3nsmo2wo",
+    "ktwp001aa8pqdiiufbrzqm",
+    "ki00hgbpv1cu86uzgxzgeh",
+    "3l61a5i944d4wglq2ckwx4",
+    "xdtnb5uypoq4vgrygrrsfr",
+    "ng6z8v812hkgzfnlhl53g",
+    "kbv1abxjlyj97p2v1jox5",
+    "8zcmm2f63rugw31k3ug0w7",
+    "b1efa8737a2c",
+    "5hh4ce2ujyddfz4q56pl8j",
+    "1bffm7cusrdu925e2nxz",
+    "062bea393ff5",
+    "ccf4f91d949a",
+    "f6b08e3f-73f0-44e8-b3c5-f666327088eb",
+    "7xtilyvldkb59jqeytgvmj",
+    "i3t7y6fp9pcmj10b899cjb",
+    "a8178cdnogelfsuuh7hx",
+    "9bca1532-d425-4106-989b-07cfa61c1d88",
+    "132fd83446b7",
+    "506dc71b1f8b"
   ],
   "deletedImageIds": [
     "e95073b109ed",
