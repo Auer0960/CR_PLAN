@@ -374,35 +374,11 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "4y3gdd7eppgz44a90rgd0b",
-      "source": "640afe95cf4c",
-      "target": "6b77aca76c61",
-      "label": "最好的朋友兼競爭對手",
-      "description": "最好的朋友兼競爭對手，生命中的救命恩人，給予她勇氣和成長力量的存在",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "wiaxppzfi6o1uokz8e74",
-      "source": "640afe95cf4c",
-      "target": "f608774fa988",
-      "label": "HL公司員工",
-      "description": "HL公司員工，對公司黑暗面不知情的高層",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "ea39ak23y4rxz6flr8d82m",
       "source": "36502926f6ae",
       "target": "1987583ac7ec",
       "label": "受義兄遺託保護",
       "description": "受義兄遺託保護，並邀請加入月華組。",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "kbv1abxjlyj97p2v1jox5",
-      "source": "f608774fa988",
-      "target": "5427409afb20",
-      "label": "絕對忠誠的私人士兵",
-      "description": "絕對忠誠的私人士兵，最尊敬的人",
       "arrowStyle": "arrow"
     },
     {
@@ -523,14 +499,6 @@
       "target": "f608774fa988",
       "label": "伯樂與朋友",
       "description": "伯樂與朋友，現已重修舊好",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "1bffm7cusrdu925e2nxz",
-      "source": "6b77aca76c61",
-      "target": "3505f8f7462d",
-      "label": "友好的同事",
-      "description": "友好的同事",
       "arrowStyle": "arrow"
     },
     {
@@ -747,14 +715,6 @@
       "target": "f608774fa988",
       "label": "同事",
       "description": "同事。艾黛爾是少數能逼詩音出門的人（透過暴力破解陷阱）。\n可、可惡的Ｅ人……！",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "c8b752d9-2284-4e4f-b9e2-262c9580acd4",
-      "source": "6b77aca76c61",
-      "target": "640afe95cf4c",
-      "label": "最好的朋友與對手",
-      "description": "最重要的對手兼朋友，後期轉為守護對象",
       "arrowStyle": "arrow"
     },
     {
@@ -995,6 +955,54 @@
       "target": "f608774fa988",
       "label": "服從",
       "description": "",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "333c8ec6-04ea-4756-96b1-f53c855421ee",
+      "source": "640afe95cf4c",
+      "target": "6b77aca76c61",
+      "label": "最好的朋友兼競爭對手",
+      "description": "最好的朋友兼競爭對手，生命中的救命恩人，給予她勇氣和成長力量的存在",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "0ab3d54c-e4c9-4e09-b606-30d4205a96ef",
+      "source": "6b77aca76c61",
+      "target": "640afe95cf4c",
+      "label": "最好的朋友兼競爭對手",
+      "description": "最好的朋友兼競爭對手，生命中的救命恩人，給予她勇氣和成長力量的存在",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "14c0d5e8-3830-4a05-9110-4dfee08c2648",
+      "source": "6b77aca76c61",
+      "target": "3505f8f7462d",
+      "label": "友好",
+      "description": "友好的同事",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "d142bd76-0bcf-4280-8461-250b3e246eb0",
+      "source": "640afe95cf4c",
+      "target": "f608774fa988",
+      "label": "冷淡",
+      "description": "HL公司員工，對公司黑暗面不知情的高層",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "88acef49-936b-404b-87aa-4278f97046db",
+      "source": "640afe95cf4c",
+      "target": "3505f8f7462d",
+      "label": "冷淡",
+      "description": "",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "feee38d9-0d5f-4a09-b0b0-88d32a2edca1",
+      "source": "f608774fa988",
+      "target": "5427409afb20",
+      "label": "絕對忠誠",
+      "description": "絕對忠誠的私人士兵，最尊敬的人",
       "arrowStyle": "arrow"
     }
   ],
@@ -1291,6 +1299,14 @@
     }
   ],
   "tagCategories": [],
-  "deletedRelationshipIds": [],
+  "deletedRelationshipIds": [
+    "4y3gdd7eppgz44a90rgd0b",
+    "6dd5c20f-11f9-48d7-b619-f353cc641d9a",
+    "c8b752d9-2284-4e4f-b9e2-262c9580acd4",
+    "569059fb-8379-4f93-8ae1-14530718542a",
+    "1bffm7cusrdu925e2nxz",
+    "wiaxppzfi6o1uokz8e74",
+    "kbv1abxjlyj97p2v1jox5"
+  ],
   "deletedImageIds": []
 }

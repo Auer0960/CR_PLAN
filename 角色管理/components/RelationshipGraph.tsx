@@ -151,9 +151,36 @@ const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ characters, relat
 
         // Setup for individual nodes view
         // FIX: Use imported Selection type directly.
-        function setupIndividualView(svg: Selection<SVGSVGElement, unknown, null, undefined>, g: Selection<SVGGElement, unknown, null, undefined>, nodes: SimulationNode[], links: SimulationLink[]) {
+        function setupIndividualView(svg: Selection<SVGSVGElement, unknown, null, undefined>, g: Selection<SVGGElement, unknown, null, undefined>, nodes: SimulationNode[], rawLinks: SimulationLink[]) {
+            // Pre-process links to merge bidirectional relationships with same label
+            const linkMap = new Map<string, SimulationLink & { isBidirectional?: boolean }>();
+
+            rawLinks.forEach(link => {
+                const sourceId = typeof link.source === 'object' ? (link.source as any).id : link.source;
+                const targetId = typeof link.target === 'object' ? (link.target as any).id : link.target;
+                const label = link.label;
+                
+                const pairKey = [sourceId, targetId].sort().join(':') + '|' + label;
+                
+                if (!linkMap.has(pairKey)) {
+                     linkMap.set(pairKey, { ...link, isBidirectional: false });
+                } else {
+                     const existing = linkMap.get(pairKey)!;
+                     const existingSource = typeof existing.source === 'object' ? (existing.source as any).id : existing.source;
+                     
+                     // If sources are different, it's a reverse link
+                     if (existingSource !== sourceId) {
+                         existing.isBidirectional = true;
+                     }
+                }
+            });
+
+            const links = Array.from(linkMap.values());
+
             // Arrowheads for directed links
-            svg.append('defs').append('marker')
+            const defs = svg.append('defs');
+            
+            defs.append('marker')
                 .attr('id', 'arrowhead')
                 .attr('viewBox', '-0 -5 10 10')
                 .attr('refX', 23)
@@ -163,6 +190,19 @@ const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ characters, relat
                 .attr('markerHeight', 8)
                 .append('svg:path')
                 .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+                .attr('fill', '#999');
+
+            // Arrowheads for bidirectional start (pointing back)
+            defs.append('marker')
+                .attr('id', 'arrowhead-start')
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', -13) // Negative refX to push it inside the line (which starts at 0)
+                .attr('refY', 0)
+                .attr('orient', 'auto')
+                .attr('markerWidth', 8)
+                .attr('markerHeight', 8)
+                .append('svg:path')
+                .attr('d', 'M 10,-5 L 0,0 L 10,5') // Pointing left <
                 .attr('fill', '#999');
 
             // Identify connected nodes to apply selective gravity
@@ -217,7 +257,8 @@ const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ characters, relat
                 .join('path')
                 .attr('stroke-width', 1.5)
                 .attr('fill', 'none')
-                .attr('marker-end', d => d.arrowStyle === 'arrow' ? 'url(#arrowhead)' : 'none');
+                .attr('marker-end', d => d.arrowStyle === 'arrow' || (d as any).isBidirectional ? 'url(#arrowhead)' : 'none')
+                .attr('marker-start', d => (d as any).isBidirectional ? 'url(#arrowhead-start)' : 'none');
 
             // Link labels with background for better visibility
             const linkLabelGroup = g.append('g')
