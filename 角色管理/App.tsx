@@ -161,14 +161,18 @@ const App: React.FC = () => {
                 const projectData: AppData = await response.json();
 
                 // Load Local User Data (user_data.json)
+                // Both local and production use the same file now
                 let localUserData: Partial<AppData> & { deletedRelationshipIds?: string[], deletedImageIds?: string[] } = {};
                 try {
-                    const localResponse = await fetch('/CR_PLAN/api/user-data');
+                    const localResponse = await fetch('./user_data.json');
                     if (localResponse.ok) {
                         localUserData = await localResponse.json();
+                        console.log('✅ Loaded user_data.json successfully');
+                    } else {
+                        console.warn('⚠️ user_data.json not found, using defaults');
                     }
                 } catch (e) {
-                    console.warn("Failed to load local user data", e);
+                    console.warn("Failed to load user_data.json", e);
                 }
 
                 // Load LocalStorage (Backup)

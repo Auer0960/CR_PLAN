@@ -5,8 +5,8 @@
   "type": "module",
   "homepage": "https://Auer0960.github.io/CR_PLAN/",
   "scripts": {
-    "dev": "vite --open",
-    "build": "vite build",
+    "dev": "node scripts/copy_user_data.js && vite --open",
+    "build": "node scripts/copy_user_data.js && vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist -b deploy"
