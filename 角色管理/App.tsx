@@ -157,13 +157,13 @@ const App: React.FC = () => {
                 }
 
                 // Load Project Data (cr_data.json)
-                const response = await fetch('/cr_data.json');
+                const response = await fetch('./cr_data.json');
                 const projectData: AppData = await response.json();
 
                 // Load Local User Data (user_data.json)
                 let localUserData: Partial<AppData> & { deletedRelationshipIds?: string[], deletedImageIds?: string[] } = {};
                 try {
-                    const localResponse = await fetch('/api/user-data');
+                    const localResponse = await fetch('./api/user-data');
                     if (localResponse.ok) {
                         localUserData = await localResponse.json();
                     }
