@@ -356,10 +356,12 @@ const App: React.FC = () => {
 
                 const sanitizedCategories = savedTags.length > 0 ? savedTags.map(cat => ({
                     ...cat,
-                    tags: cat.tags.map(tag => ({ ...tag, color: cat.color }))
+                    tags: cat.tags.map(tag => ({ ...tag, color: cat.color })),
+                    selectionMode: cat.selectionMode || (cat.name === '勢力' ? 'single' : 'multiple')
                 })) : (projectData.tagCategories || []).map(cat => ({
                     ...cat,
-                    tags: cat.tags.map(tag => ({ ...tag, color: cat.color }))
+                    tags: cat.tags.map(tag => ({ ...tag, color: cat.color })),
+                    selectionMode: cat.selectionMode || (cat.name === '勢力' ? 'single' : 'multiple')
                 }));
                 setTagCategories(sanitizedCategories);
 
