@@ -1,0 +1,5 @@
+{
+  "name": "角色管理",
+  "description": "An application to create, visualize, and edit character relationship diagrams using natural language input powered by AI. Users can manage characters, apply tags, and save/load their work.",
+  "requestFramePermissions": []
+}

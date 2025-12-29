@@ -1,0 +1,57 @@
+{
+  "tagCategories": [
+    {
+      "id": "05096453-7f7e-4fc5-9caf-20b7b75b5bc6",
+      "name": "勢力",
+      "color": "#3b82f6",
+      "tags": [
+        {
+          "id": "15c61be2-3c9e-4c8d-ac51-1e721304d212",
+          "label": "青龍幫",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "e481552e-0de3-4cc2-84bd-5e3b0242b76f",
+          "label": "卡迪久家族",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "8c2a23cd-3256-495c-939f-2243e4e776c8",
+          "label": "寡頭",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "0de2c2d5-1756-4f90-8b38-d8f5f7a86a91",
+          "label": "純淨源",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "b9a12f03-e056-43f9-9bb5-28a003b0de2e",
+          "label": "月華組",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "f2fe830e-062d-4e30-8341-a5c2fcadb154",
+          "label": "羅士昂兄弟會",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "c431b224-5aea-4f15-a712-f96c933725c8",
+          "label": "地獄光明",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "9db10628-fbad-4a72-aa93-1eddb7bbb953",
+          "label": "HL娛樂",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "475456f8-ed29-472c-8379-6709da30025c",
+          "label": "其他",
+          "color": "#3b82f6"
+        }
+      ],
+      "selectionMode": "multiple"
+    }
+  ]
+}
