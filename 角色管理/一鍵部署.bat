@@ -28,7 +28,7 @@ if errorlevel 1 (
 
 echo.
 echo [3/4] 複製 user_data.json 到 public 資料夾...
-copy /Y user_data.json public\user_data.json
+node scripts/copy_user_data.js
 if errorlevel 1 (
     echo.
     echo ❌ 複製失敗！
@@ -37,7 +37,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [4/4] 打包並部署...
+echo [4/5] 打包專案...
 call npm run build
 if errorlevel 1 (
     echo.
@@ -47,7 +47,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo 正在部署到 GitHub Pages...
+echo [5/5] 部署到 GitHub Pages...
 call npx gh-pages -d dist -b deploy
 if errorlevel 1 (
     echo.
@@ -55,10 +55,6 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-
-echo.
-echo 清理 public 資料夾中的 user_data.json...
-del /F /Q public\user_data.json
 
 echo.
 echo ========================================
