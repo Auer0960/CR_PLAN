@@ -807,35 +807,11 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "e9bd04846dae",
-      "source": "46e02b16381e",
-      "target": "ec29d80c3c89",
-      "label": "好友",
-      "description": "好友。",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "403e8b155a0f",
       "source": "ec29d80c3c89",
       "target": "80b39e66ca5c",
       "label": "愛人/性關係",
       "description": "愛人/性關係（重要顧客）",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "137cb07835aa",
-      "source": "ec29d80c3c89",
-      "target": "1fb2240ea2dc",
-      "label": "好友",
-      "description": "好友",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "73816ef604a0",
-      "source": "ec29d80c3c89",
-      "target": "46e02b16381e",
-      "label": "好友",
-      "description": "好友",
       "arrowStyle": "arrow"
     },
     {
@@ -1003,6 +979,38 @@
       "source": "640afe95cf4c",
       "target": "3505f8f7462d",
       "label": "冷淡",
+      "description": "",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "d950cee4-d731-410e-a719-13eed2b95ab8",
+      "source": "e2091b76dfab",
+      "target": "46e02b16381e",
+      "label": "親近",
+      "description": "以客人身分與女僕們處好關係",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "0cb94b31-d681-4094-8a27-0fd5eab672bc",
+      "source": "1fb2240ea2dc",
+      "target": "ec29d80c3c89",
+      "label": "服從",
+      "description": "",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "5c6a4df9-146e-45b9-865d-5549f5b135d3",
+      "source": "46e02b16381e",
+      "target": "ec29d80c3c89",
+      "label": "服從",
+      "description": "",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "0f7e461e-b8e4-4dfe-a357-8cbea747cd57",
+      "source": "ec29d80c3c89",
+      "target": "1987583ac7ec",
+      "label": "服從",
       "description": "",
       "arrowStyle": "arrow"
     }
@@ -1313,7 +1321,79 @@
       "notes": ""
     }
   ],
-  "tagCategories": [],
+  "tagCategories": [
+    {
+      "id": "81da81b2-9f68-4d38-86c2-23c2e7a9ada4",
+      "name": "體位",
+      "color": "#ef4444",
+      "tags": [
+        {
+          "id": "30213b13-d144-47d9-9c7b-595239f3c413",
+          "label": "背後位",
+          "color": "#ef4444"
+        }
+      ],
+      "selectionMode": "multiple"
+    },
+    {
+      "id": "05096453-7f7e-4fc5-9caf-20b7b75b5bc6",
+      "name": "勢力",
+      "color": "#3b82f6",
+      "tags": [
+        {
+          "id": "15c61be2-3c9e-4c8d-ac51-1e721304d212",
+          "label": "青龍幫",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "e481552e-0de3-4cc2-84bd-5e3b0242b76f",
+          "label": "卡迪久家族",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "8c2a23cd-3256-495c-939f-2243e4e776c8",
+          "label": "寡頭",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "0de2c2d5-1756-4f90-8b38-d8f5f7a86a91",
+          "label": "純淨源",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "b9a12f03-e056-43f9-9bb5-28a003b0de2e",
+          "label": "月華組",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "f2fe830e-062d-4e30-8341-a5c2fcadb154",
+          "label": "羅士昂兄弟會",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "c431b224-5aea-4f15-a712-f96c933725c8",
+          "label": "地獄光明",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "9db10628-fbad-4a72-aa93-1eddb7bbb953",
+          "label": "HL娛樂",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "475456f8-ed29-472c-8379-6709da30025c",
+          "label": "其他",
+          "color": "#3b82f6"
+        },
+        {
+          "id": "2f306d90-20c8-4163-8e3c-2d92206b0553",
+          "label": "加姆組織",
+          "color": "#3b82f6"
+        }
+      ],
+      "selectionMode": "single"
+    }
+  ],
   "deletedRelationshipIds": [
     "847fc35cffbe",
     "8c35512e351a",
@@ -1407,7 +1487,10 @@
     "8c3c97db-de25-4256-9205-fa6604f2efeb",
     "c8b752d9-2284-4e4f-b9e2-262c9580acd4",
     "4y3gdd7eppgz44a90rgd0b",
-    "wiaxppzfi6o1uokz8e74"
+    "wiaxppzfi6o1uokz8e74",
+    "73816ef604a0",
+    "137cb07835aa",
+    "e9bd04846dae"
   ],
   "deletedImageIds": [
     "e95073b109ed",
