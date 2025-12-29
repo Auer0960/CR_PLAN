@@ -58,8 +58,8 @@ export default function localApiPlugin(): Plugin {
             server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next) => {
                 const url = req.url?.split('?')[0]; // Simple URL parsing
 
-                // API: Get User Data
-                if (url === '/api/user-data' && req.method === 'GET') {
+                // API: Get User Data (支援 /api/user-data 和 /CR_PLAN/api/user-data)
+                if ((url === '/api/user-data' || url === '/CR_PLAN/api/user-data') && req.method === 'GET') {
                     try {
                         if (fs.existsSync(USER_DATA_FILE)) {
                             const data = fs.readFileSync(USER_DATA_FILE, 'utf-8');
@@ -77,8 +77,8 @@ export default function localApiPlugin(): Plugin {
                     return;
                 }
 
-                // API: Save Metadata
-                if (url === '/api/save-metadata' && req.method === 'POST') {
+                // API: Save Metadata (支援 /api/save-metadata 和 /CR_PLAN/api/save-metadata)
+                if ((url === '/api/save-metadata' || url === '/CR_PLAN/api/save-metadata') && req.method === 'POST') {
                     try {
                         const newData = await parseBody(req);
                         let currentData = {};

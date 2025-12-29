@@ -163,7 +163,7 @@ const App: React.FC = () => {
                 // Load Local User Data (user_data.json)
                 let localUserData: Partial<AppData> & { deletedRelationshipIds?: string[], deletedImageIds?: string[] } = {};
                 try {
-                    const localResponse = await fetch('./api/user-data');
+                    const localResponse = await fetch('/CR_PLAN/api/user-data');
                     if (localResponse.ok) {
                         localUserData = await localResponse.json();
                     }
@@ -404,11 +404,20 @@ const App: React.FC = () => {
                     deletedImageIds: Array.from(deletedImageIds) // Save deleted Image IDs
                 };
 
-                await fetch('/api/save-metadata', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userDataToSave)
-                });
+                // 偵測是否為本地開發環境
+                const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                
+                if (isLocalDev) {
+                    // 本地開發：使用 API 寫入檔案
+                    await fetch('/CR_PLAN/api/save-metadata', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(userDataToSave)
+                    });
+                } else {
+                    // GitHub Pages：只能讀取，不能寫入
+                    console.log('⚠️ 雲端模式：資料只能讀取，無法儲存編輯');
+                }
 
             } catch (e: any) {
                 console.error("Failed to save data", e);
