@@ -148,6 +148,32 @@ const App: React.FC = () => {
     const [deletedRelationshipIds, setDeletedRelationshipIds] = useState<Set<string>>(new Set());
     const [deletedImageIds, setDeletedImageIds] = useState<Set<string>>(new Set());
 
+    // Canonical ID mapping to prevent duplicate "same-name different-id" characters from appearing.
+    // These canonical IDs are the ones in cr_data.json.
+    const CANONICAL_ID_MAP: Record<string, string> = useMemo(() => ({
+        // 安東 (old -> canonical)
+        'c8a2b1d3e4f5': '1a4889cddbd5',
+        // 藤原 亞璃紗 (old -> canonical)
+        '8f7c3e9a2b1d': '5b0ba53871bb',
+        // 相田 龍之介 (old -> canonical)
+        'e4a5d8f9b2c3': 'c5c6abfed105',
+    }), []);
+
+    const normalizeId = useCallback((id: string) => CANONICAL_ID_MAP[id] || id, [CANONICAL_ID_MAP]);
+
+    const mergeCharacterFields = useCallback((base: Character, extra: Character): Character => {
+        // Prefer base fields, but fill missing from extra; union tagIds
+        const tagIds = Array.from(new Set([...(base.tagIds || []), ...(extra.tagIds || [])].filter(Boolean)));
+        return {
+            ...base,
+            name: base.name || extra.name,
+            notes: base.notes || extra.notes,
+            image: base.image || extra.image,
+            avatarPosition: base.avatarPosition || extra.avatarPosition,
+            tagIds,
+        };
+    }, []);
+
     const getApiPrefix = () => {
         // Support both root and sub-path deployments (e.g. /CR_PLAN)
         return window.location.pathname.startsWith('/CR_PLAN') ? '/CR_PLAN' : '';
@@ -182,7 +208,23 @@ const App: React.FC = () => {
                 const projectData: AppData = await response.json();
 
                 // Load Local User Data (user_data)
-                let localUserData: Partial<AppData> & { deletedRelationshipIds?: string[], deletedImageIds?: string[] } = {};
+                type LocalUserData = {
+                    // NOTE: user_data.json stores character overrides as a map keyed by characterId (not Character[])
+                    characters?: Record<string, {
+                        name?: string;
+                        notes?: string;
+                        image?: string;
+                        avatarPosition?: any;
+                        tagIds?: string[];
+                    }>;
+                    relationships?: Relationship[];
+                    tagCategories?: TagCategory[];
+                    characterImages?: CharacterImage[];
+                    deletedRelationshipIds?: string[];
+                    deletedImageIds?: string[];
+                };
+
+                let localUserData: LocalUserData = {};
                 try {
                     const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                     if (isLocalDev) {
@@ -230,6 +272,73 @@ const App: React.FC = () => {
                     console.warn("Failed to load user_data.json", e);
                 }
 
+                // --- Normalize user_data.json (old IDs / duplicate names) BEFORE merging ---
+                // This prevents "same-name different-id" duplicates from being re-added by recovery logic.
+                const normalizeUserData = (ud: LocalUserData) => {
+                    if (!ud) return ud;
+
+                    // 1) characters: key remap oldId -> canonicalId and merge fields
+                    const inputChars = (ud.characters && typeof ud.characters === 'object') ? ud.characters : {};
+                    const normalizedChars: Record<string, any> = {};
+
+                    Object.keys(inputChars).forEach((rawId) => {
+                        const nid = normalizeId(rawId);
+                        const entry = (inputChars as any)[rawId] || {};
+
+                        // normalize image path if it contains old IDs in filename
+                        const normalizedEntry = {
+                            ...entry,
+                            image: typeof entry.image === 'string' ? entry.image.replace(rawId, nid) : entry.image,
+                        };
+
+                        if (!normalizedChars[nid]) {
+                            normalizedChars[nid] = normalizedEntry;
+                        } else {
+                            // merge fields (prefer existing but fill missing, union tagIds)
+                            const a = normalizedChars[nid];
+                            const tagIds = Array.from(new Set([...(a.tagIds || []), ...(normalizedEntry.tagIds || [])].filter(Boolean)));
+                            normalizedChars[nid] = {
+                                ...a,
+                                name: a.name || normalizedEntry.name,
+                                notes: a.notes || normalizedEntry.notes,
+                                image: a.image || normalizedEntry.image,
+                                avatarPosition: a.avatarPosition || normalizedEntry.avatarPosition,
+                                tagIds,
+                            };
+                        }
+                    });
+
+                    // 2) relationships: source/target remap
+                    const normalizedRels = (ud.relationships || []).map((r: any) => ({
+                        ...r,
+                        source: normalizeId(r.source),
+                        target: normalizeId(r.target),
+                    }));
+
+                    // 3) characterImages: characterId remap + imageDataUrl filename remap
+                    const normalizedImgs = (ud.characterImages || []).map((img: any) => {
+                        const cid = normalizeId(img.characterId);
+                        let url = img.imageDataUrl;
+                        if (typeof url === 'string') {
+                            // Apply known old->canonical replacements in filenames
+                            url = url
+                                .replace('c8a2b1d3e4f5', '1a4889cddbd5')
+                                .replace('8f7c3e9a2b1d', '5b0ba53871bb')
+                                .replace('e4a5d8f9b2c3', 'c5c6abfed105');
+                        }
+                        return { ...img, characterId: cid, imageDataUrl: url };
+                    });
+
+                    return {
+                        ...ud,
+                        characters: normalizedChars as any,
+                        relationships: normalizedRels as any,
+                        characterImages: normalizedImgs as any,
+                    };
+                };
+
+                localUserData = normalizeUserData(localUserData);
+
                 // Load LocalStorage (Backup)
                 const savedData = localStorage.getItem('characterMapData');
                 let savedCharacters: Character[] = [];
@@ -239,6 +348,18 @@ const App: React.FC = () => {
                     const parsed = JSON.parse(savedData);
                     savedCharacters = parsed.characters || [];
                     savedTags = parsed.tagCategories || [];
+                }
+
+                // Normalize LocalStorage characters to canonical IDs and dedupe.
+                if (savedCharacters.length > 0) {
+                    const byId = new Map<string, Character>();
+                    for (const sc of savedCharacters) {
+                        const nid = normalizeId(sc.id);
+                        const normalized: Character = { ...sc, id: nid };
+                        const existing = byId.get(nid);
+                        byId.set(nid, existing ? mergeCharacterFields(existing, normalized) : normalized);
+                    }
+                    savedCharacters = Array.from(byId.values());
                 }
 
                 // Restore deleted IDs
@@ -276,27 +397,85 @@ const App: React.FC = () => {
                 // If we have saved characters that are not in the file (newly created), add them
                 const fileCharIds = new Set(mergedCharacters.map(c => c.id));
                 savedCharacters.forEach(sc => {
-                    if (!fileCharIds.has(sc.id)) {
-                        mergedCharacters.push(sc);
-                        fileCharIds.add(sc.id); // Update set
+                    // Normalize old IDs to canonical IDs so we don't create duplicates.
+                    const nid = normalizeId(sc.id);
+
+                    // If canonical already exists, merge fields into the existing character.
+                    if (fileCharIds.has(nid)) {
+                        const idx = mergedCharacters.findIndex(c => c.id === nid);
+                        if (idx >= 0) {
+                            mergedCharacters[idx] = mergeCharacterFields(mergedCharacters[idx], { ...sc, id: nid });
+                        }
+                        return;
                     }
+
+                    // If same name exists (but different id), DO NOT add a duplicate node; merge into the existing one.
+                    const nameMatchIdx = mergedCharacters.findIndex(c => c.name === sc.name);
+                    if (nameMatchIdx >= 0) {
+                        mergedCharacters[nameMatchIdx] = mergeCharacterFields(mergedCharacters[nameMatchIdx], { ...sc, id: mergedCharacters[nameMatchIdx].id });
+                        return;
+                    }
+
+                    mergedCharacters.push({ ...sc, id: nid });
+                    fileCharIds.add(nid); // Update set
                 });
 
                 // 3. If we have characters in User Data that are not in File or Saved (e.g. lost local storage), recover them
                 if (localUserData.characters) {
                     Object.keys(localUserData.characters).forEach(id => {
-                        if (!fileCharIds.has(id)) {
-                            const manualData = localUserData.characters![id];
-                            // Try to guess name or use placeholder
+                        const nid = normalizeId(id);
+                        const manualData = (localUserData.characters as any)![id];
+
+                        // If canonical already exists, merge minimal fields into it (do NOT add duplicates)
+                        if (fileCharIds.has(nid)) {
+                            const idx = mergedCharacters.findIndex(c => c.id === nid);
+                            if (idx >= 0) {
+                                mergedCharacters[idx] = mergeCharacterFields(
+                                    mergedCharacters[idx],
+                                    {
+                                        id: nid,
+                                        name: (manualData as any).name || mergedCharacters[idx].name,
+                                        notes: (manualData as any).notes || mergedCharacters[idx].notes || '',
+                                        tagIds: manualData.tagIds || [],
+                                        image: manualData.image,
+                                        avatarPosition: manualData.avatarPosition
+                                    } as any
+                                );
+                            }
+                            return;
+                        }
+
+                        // If same name exists, merge into that existing character
+                        const manualName = (manualData as any).name;
+                        if (manualName) {
+                            const nameIdx = mergedCharacters.findIndex(c => c.name === manualName);
+                            if (nameIdx >= 0) {
+                                mergedCharacters[nameIdx] = mergeCharacterFields(
+                                    mergedCharacters[nameIdx],
+                                    {
+                                        id: mergedCharacters[nameIdx].id,
+                                        name: manualName,
+                                        notes: (manualData as any).notes || mergedCharacters[nameIdx].notes || '',
+                                        tagIds: manualData.tagIds || [],
+                                        image: manualData.image,
+                                        avatarPosition: manualData.avatarPosition
+                                    } as any
+                                );
+                                return;
+                            }
+                        }
+
+                        // Otherwise, recover as a real new character (rare)
+                        if (!fileCharIds.has(nid)) {
                             mergedCharacters.push({
-                                id: id,
+                                id: nid,
                                 name: (manualData as any).name || "未知角色",
                                 notes: (manualData as any).notes || "此角色僅存在於關聯資料中，原始設定可能已遺失。",
                                 tagIds: manualData.tagIds || [],
                                 image: manualData.image,
                                 avatarPosition: manualData.avatarPosition
                             });
-                            fileCharIds.add(id);
+                            fileCharIds.add(nid);
                         }
                     });
                 }

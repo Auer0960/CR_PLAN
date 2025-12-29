@@ -7,7 +7,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Configuration
-const characterId = 'c8a2b1d3e4f5';
+// NOTE: Use canonical ID from cr_data.json to avoid duplicate characters/images.
+const characterId = '1a4889cddbd5';
 const characterName = '安東';
 const sourceImage = 'c:/Users/Auer0960/Desktop/專區/CR專案/文件/CursorAI_CR專用/CR母專案劇情資料/character/安東/cr091.png';
 const outputDir = path.join(__dirname, '../public/character_images');

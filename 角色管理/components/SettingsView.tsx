@@ -21,7 +21,9 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [importType, setImportType] = useState<'characters' | 'tags' | null>(null);
     const [isConfirmingReset, setIsConfirmingReset] = useState(false);
+    const [isConfirmingClearCache, setIsConfirmingClearCache] = useState(false);
     const resetTimeoutRef = useRef<number | null>(null);
+    const clearCacheTimeoutRef = useRef<number | null>(null);
 
     const handleImportClick = (type: 'characters' | 'tags') => {
         setImportType(type);
@@ -71,6 +73,32 @@ const SettingsView: React.FC<SettingsViewProps> = ({
             setIsConfirmingReset(true);
             resetTimeoutRef.current = window.setTimeout(() => {
                 setIsConfirmingReset(false);
+            }, 3000);
+        }
+    };
+
+    const handleClearCacheClick = () => {
+        if (clearCacheTimeoutRef.current) {
+            clearTimeout(clearCacheTimeoutRef.current);
+            clearCacheTimeoutRef.current = null;
+        }
+
+        if (isConfirmingClearCache) {
+            try {
+                // Only remove the app's local backup cache (keeps AI provider settings, etc.)
+                localStorage.removeItem('characterMapData');
+                alert('✅ 已清除本地快取（characterMapData）。\n\n頁面即將重新整理。');
+                window.location.reload();
+            } catch (e) {
+                console.error('Failed to clear cache:', e);
+                alert('❌ 清除快取失敗，請打開 F12 Console 查看錯誤。');
+            } finally {
+                setIsConfirmingClearCache(false);
+            }
+        } else {
+            setIsConfirmingClearCache(true);
+            clearCacheTimeoutRef.current = window.setTimeout(() => {
+                setIsConfirmingClearCache(false);
             }, 3000);
         }
     };
@@ -136,6 +164,24 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                             style={{ display: 'none' }}
                         />
                     </div>
+                </div>
+
+                {/* Local Cache */}
+                <div className="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700">
+                    <h2 className="text-xl font-semibold mb-3 text-indigo-400">本地快取</h2>
+                    <p className="text-sm text-gray-400 mb-4">
+                        如果本地端出現「同名角色重複」或資料看起來怪怪的，通常是瀏覽器 localStorage 殘留造成。
+                        這個按鈕只會清除本工具的備份快取（<span className="font-mono">characterMapData</span>），不會動到專案檔。
+                    </p>
+                    <button
+                        onClick={handleClearCacheClick}
+                        className={`px-6 py-2 text-white rounded-md font-semibold transition-all duration-200 ${isConfirmingClearCache
+                            ? 'bg-amber-700 hover:bg-amber-800 ring-2 ring-amber-300'
+                            : 'bg-amber-600 hover:bg-amber-700'
+                            }`}
+                    >
+                        {isConfirmingClearCache ? '確定清除本地快取？' : '清除本地快取（修復殘留）'}
+                    </button>
                 </div>
 
                 {/* Reset Data */}

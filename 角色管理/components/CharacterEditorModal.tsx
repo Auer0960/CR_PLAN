@@ -94,6 +94,16 @@ const resizeImage = (imageDataUrl: string, maxSize: number): Promise<string> => 
   });
 };
 
+// Helper to resolve image paths with base URL (Vite base is not always '/')
+const resolveImagePath = (imagePath: string | undefined): string => {
+  if (!imagePath) return '';
+  if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+    return imagePath;
+  }
+  const base = import.meta.env.BASE_URL || '/';
+  return `${base}${imagePath}`.replace(/\/+/g, '/');
+};
+
 
 const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
   isOpen,
@@ -465,7 +475,7 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
             <div className="flex items-center gap-3 mb-6">
               <div className="w-16 h-16 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden relative group">
                 <img
-                  src={editedCharacter.image || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(editedCharacter.name)}`}
+                  src={resolveImagePath(editedCharacter.image) || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(editedCharacter.name)}`}
                   alt={editedCharacter.name}
                   className="w-full h-full object-cover transition-all duration-300"
                   style={{
@@ -815,7 +825,11 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {currentCharacterImages.map(img => (
                     <div key={img.id} className="relative group aspect-square">
-                      <img src={img.imageDataUrl} alt="Character" className="w-full h-full object-cover rounded-md" />
+                      <img
+                        src={resolveImagePath(img.thumbnailUrl) || resolveImagePath(img.imageDataUrl)}
+                        alt="Character"
+                        className="w-full h-full object-cover rounded-md"
+                      />
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center text-white">
                         <button onClick={() => handleSetAsAvatar(img.imageDataUrl)} className="text-xs bg-indigo-600 px-2 py-1 rounded mb-1 hover:bg-indigo-700">設為頭像</button>
                         <button onClick={() => setEditingImageTagsFor(img)} className="text-xs bg-gray-600 px-2 py-1 rounded mb-1 hover:bg-gray-500">編輯 Tag</button>
@@ -853,7 +867,7 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
       <ImageCropperModal
         isOpen={!!imageToCrop}
         onClose={() => setImageToCrop(null)}
-        imageSrc={imageToCrop}
+        imageSrc={imageToCrop ? resolveImagePath(imageToCrop) : null}
         onCropComplete={handleCropComplete}
       />
     </>
