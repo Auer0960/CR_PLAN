@@ -1252,24 +1252,6 @@
   ],
   "tagCategories": [
     {
-      "id": "47d2449f-8e65-4071-af4f-ff8647aee207",
-      "name": "玩法",
-      "color": "#ef4444",
-      "tags": [
-        {
-          "id": "3fd84fd6-ef97-4de1-b7f1-2ab511155ea1",
-          "label": "足交",
-          "color": "#ef4444"
-        },
-        {
-          "id": "5ce01c68-1401-4a08-bc47-5fe1dd606c61",
-          "label": "舔陰",
-          "color": "#ef4444"
-        }
-      ],
-      "selectionMode": "multiple"
-    },
-    {
       "id": "05096453-7f7e-4fc5-9caf-20b7b75b5bc6",
       "name": "勢力",
       "color": "#3b82f6",
@@ -1318,24 +1300,6 @@
           "id": "475456f8-ed29-472c-8379-6709da30025c",
           "label": "其他",
           "color": "#3b82f6"
-        }
-      ],
-      "selectionMode": "multiple"
-    },
-    {
-      "id": "8cb6362e-335c-4853-bd89-cfcbb411fd79",
-      "name": "體位",
-      "color": "#f97316",
-      "tags": [
-        {
-          "id": "762854b7-95e8-4ecc-8719-a1a300ecb3a0",
-          "label": "後入",
-          "color": "#f97316"
-        },
-        {
-          "id": "2709be81-e5c3-4302-b282-79258d5643a5",
-          "label": "女上",
-          "color": "#f97316"
         }
       ],
       "selectionMode": "multiple"
