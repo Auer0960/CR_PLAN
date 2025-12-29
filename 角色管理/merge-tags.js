@@ -3,13 +3,13 @@ const path = require('path');
 
 // 讀取檔案
 const crDataPath = path.join(__dirname, 'public', 'cr_data.json');
-const tagsPath = 'C:\\Users\\Auer0960\\Downloads\\tags (6).json';
+const tagsPath = path.join(__dirname, 'local', 'tags (1).json');
 
 try {
     console.log('讀取 cr_data.json...');
     const crData = JSON.parse(fs.readFileSync(crDataPath, 'utf8'));
     
-    console.log('讀取 tags (6).json...');
+    console.log('讀取專案內的 TAG 資料 (local/tags (1).json)...');
     const tagsData = JSON.parse(fs.readFileSync(tagsPath, 'utf8'));
     
     // 將 tagCategories 加入 cr_data.json
