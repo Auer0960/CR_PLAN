@@ -3,6 +3,16 @@ import type { Character, TagWithColor, TagCategory } from '../types';
 import TagFilterModal from './TagFilterModal';
 import { TagsIcon, CloseIcon, SearchIcon } from './Icons';
 import { Grid } from 'react-window';
+
+// Helper to resolve image paths with base URL
+const resolveImagePath = (imagePath: string | undefined): string => {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+        return imagePath;
+    }
+    const base = import.meta.env.BASE_URL || '/';
+    return `${base}${imagePath}`.replace(/\/+/g, '/');
+};
 import AutoSizer from 'react-virtualized-auto-sizer';
 
 interface SearchViewProps {
@@ -111,7 +121,7 @@ const SearchView: React.FC<SearchViewProps> = ({ characters, allTags, tagCategor
                 >
                   <div className="w-full flex-grow bg-gray-700 relative overflow-hidden">
                     <img
-                      src={character.image || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(character.name)}`}
+                      src={resolveImagePath(character.image) || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(character.name)}`}
                       alt={character.name}
                       className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
                       style={{ imageRendering: 'auto' }}

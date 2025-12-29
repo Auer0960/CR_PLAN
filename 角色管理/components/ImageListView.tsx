@@ -5,6 +5,16 @@ import TagFilterModal from './TagFilterModal';
 import { TagsIcon, CloseIcon } from './Icons';
 import { VirtuosoGrid } from 'react-virtuoso';
 
+// Helper to resolve image paths with base URL
+const resolveImagePath = (imagePath: string | undefined): string => {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+        return imagePath;
+    }
+    const base = import.meta.env.BASE_URL || '/';
+    return `${base}${imagePath}`.replace(/\/+/g, '/');
+};
+
 interface ImageListViewProps {
     characters: Character[];
     characterImages: CharacterImage[];
@@ -131,7 +141,7 @@ const ImageListView: React.FC<ImageListViewProps> = ({ characters, characterImag
                                     style={{ contentVisibility: 'auto', containIntrinsicSize: '200px' } as React.CSSProperties}
                                 >
                                     <img
-                                        src={image.thumbnailUrl || image.imageDataUrl}
+                                        src={resolveImagePath(image.thumbnailUrl) || resolveImagePath(image.imageDataUrl)}
                                         alt={character?.name || 'Character image'}
                                         className="w-full h-full object-cover object-top"
                                         loading="lazy"
