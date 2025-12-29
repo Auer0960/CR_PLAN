@@ -153,7 +153,7 @@ async function extractData() {
 
                         const destPath = path.join(publicImagesDir, destFilename);
                         const thumbPath = path.join(publicThumbDir, destFilename);
-                        const webPath = `/character_images/${destFilename}`;
+                        const webPath = `character_images/${destFilename}`;
 
                         // Image Processing with Sharp
                         try {
@@ -205,7 +205,7 @@ async function extractData() {
                         console.warn(`Preferred avatar "${preferredAvatar}" not found for ${charName}, falling back to first image.`);
                         const sanitizedImgFile = imageFiles[0].replace(/[^a-zA-Z0-9.\u4e00-\u9fa5_-]/g, '_');
                         const firstSafeFilename = `${charId}_${sanitizedImgFile}`;
-                        newChar.image = `/character_images/${firstSafeFilename}`;
+                        newChar.image = `character_images/${firstSafeFilename}`;
                     }
                 }
 
