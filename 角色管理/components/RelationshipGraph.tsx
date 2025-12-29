@@ -22,6 +22,18 @@ import {
 import type { Character, Relationship, TagCategory } from '../types';
 import { UserIcon, ClusterIcon } from './Icons';
 
+// Helper to resolve image paths with base URL
+const resolveImagePath = (imagePath: string | undefined): string => {
+    if (!imagePath) return '';
+    // If it's already an absolute URL or data URI, return as-is
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+        return imagePath;
+    }
+    // Add base path for relative URLs
+    const base = import.meta.env.BASE_URL || '/';
+    return `${base}${imagePath}`.replace(/\/+/g, '/');
+};
+
 interface RelationshipGraphProps {
     characters: Character[];
     relationships: Relationship[];
@@ -312,7 +324,7 @@ const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ characters, relat
                 .attr('r', nodeRadius);
 
             node.append('image')
-                .attr('xlink:href', d => d.image || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(d.name)}`)
+                .attr('xlink:href', d => resolveImagePath(d.image) || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(d.name)}`)
                 .attr('x', -nodeRadius)
                 .attr('y', -nodeRadius)
                 .attr('height', nodeRadius * 2)
@@ -550,7 +562,7 @@ const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ characters, relat
                 .attr('r', nodeRadius);
 
             node.append('image')
-                .attr('xlink:href', d => d.image || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(d.name)}`)
+                .attr('xlink:href', d => resolveImagePath(d.image) || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(d.name)}`)
                 .attr('x', -nodeRadius)
                 .attr('y', -nodeRadius)
                 .attr('height', nodeRadius * 2)

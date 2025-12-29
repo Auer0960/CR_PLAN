@@ -3,6 +3,16 @@ import type { Character, CharacterImage, TagCategory, TagWithColor, Tag } from '
 import { CloseIcon, TagsIcon, TrashIcon } from './Icons';
 import TagSelectorModal from './TagSelectorModal';
 
+// Helper to resolve image paths with base URL
+const resolveImagePath = (imagePath: string | undefined): string => {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+        return imagePath;
+    }
+    const base = import.meta.env.BASE_URL || '/';
+    return `${base}${imagePath}`.replace(/\/+/g, '/');
+};
+
 interface ImageDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -82,7 +92,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, im
           </button>
           
           <div className="w-full md:w-2/3 flex-shrink-0 bg-black flex items-center justify-center">
-            <img src={image.imageDataUrl} alt={`Image of ${character.name}`} className="max-w-full max-h-[90vh] object-contain" />
+            <img src={resolveImagePath(image.imageDataUrl)} alt={`Image of ${character.name}`} className="max-w-full max-h-[90vh] object-contain" />
           </div>
 
           <div className="w-full md:w-1/3 p-6 flex flex-col overflow-y-auto">

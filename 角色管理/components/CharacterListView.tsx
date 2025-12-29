@@ -4,6 +4,16 @@ import { PlusIcon, SearchIcon, TagsIcon, CloseIcon } from './Icons';
 import TagFilterModal from './TagFilterModal';
 import { VirtuosoGrid } from 'react-virtuoso';
 
+// Helper to resolve image paths with base URL
+const resolveImagePath = (imagePath: string | undefined): string => {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+        return imagePath;
+    }
+    const base = import.meta.env.BASE_URL || '/';
+    return `${base}${imagePath}`.replace(/\/+/g, '/');
+};
+
 interface CharacterListViewProps {
   characters: Character[];
   onCharacterClick: (character: Character) => void;
@@ -136,7 +146,7 @@ const CharacterListView: React.FC<CharacterListViewProps> = ({
                 >
                   <div className="w-full flex-grow bg-gray-700 relative overflow-hidden">
                     <img
-                      src={character.image || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(character.name)}`}
+                      src={resolveImagePath(character.image) || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(character.name)}`}
                       alt={character.name}
                       className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
                       style={{ imageRendering: 'auto' }}
