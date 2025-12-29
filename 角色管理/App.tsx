@@ -139,9 +139,30 @@ const App: React.FC = () => {
     const [aiProvider, setAiProvider] = useState<AiProvider>('gemini');
     const [openaiApiKey, setOpenaiApiKey] = useState('');
 
+    // Save status (so user can tell if persistence succeeded)
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'readonly' | 'error'>('idle');
+    const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+    const [saveError, setSaveError] = useState<string | null>(null);
+
     // Load data on mount
     const [deletedRelationshipIds, setDeletedRelationshipIds] = useState<Set<string>>(new Set());
     const [deletedImageIds, setDeletedImageIds] = useState<Set<string>>(new Set());
+
+    const getApiPrefix = () => {
+        // Support both root and sub-path deployments (e.g. /CR_PLAN)
+        return window.location.pathname.startsWith('/CR_PLAN') ? '/CR_PLAN' : '';
+    };
+
+    const fetchJsonNoCache = async (url: string) => {
+        const res = await fetch(url, {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-store',
+                'Pragma': 'no-cache',
+            },
+        });
+        return res;
+    };
 
     useEffect(() => {
         const loadData = async () => {
@@ -160,16 +181,50 @@ const App: React.FC = () => {
                 const response = await fetch('./cr_data.json');
                 const projectData: AppData = await response.json();
 
-                // Load Local User Data (user_data.json)
-                // Both local and production use the same file now
+                // Load Local User Data (user_data)
                 let localUserData: Partial<AppData> & { deletedRelationshipIds?: string[], deletedImageIds?: string[] } = {};
                 try {
-                    const localResponse = await fetch('./user_data.json');
-                    if (localResponse.ok) {
-                        localUserData = await localResponse.json();
-                        console.log('✅ Loaded user_data.json successfully');
+                    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                    if (isLocalDev) {
+                        // In local dev, ALWAYS load from local API (the same place we write to),
+                        // otherwise refresh (F5) may read stale public/user_data.json.
+                        const prefix = getApiPrefix();
+                        const apiCandidates = [`${prefix}/api/user-data`, `/api/user-data`].filter((v, i, a) => a.indexOf(v) === i);
+                        let loaded = false;
+
+                        for (const apiUrl of apiCandidates) {
+                            try {
+                                const apiRes = await fetchJsonNoCache(apiUrl);
+                                if (apiRes.ok) {
+                                    localUserData = await apiRes.json();
+                                    console.log(`✅ Loaded user data from API: ${apiUrl}`);
+                                    loaded = true;
+                                    break;
+                                }
+                            } catch {
+                                // try next candidate
+                            }
+                        }
+
+                        if (!loaded) {
+                            // Fallback: if API isn't running, try static file to avoid blank data.
+                            const localResponse = await fetchJsonNoCache('./user_data.json');
+                            if (localResponse.ok) {
+                                localUserData = await localResponse.json();
+                                console.log('✅ Loaded user_data.json (static fallback)');
+                            } else {
+                                console.warn('⚠️ user data not found (API/static), using defaults');
+                            }
+                        }
                     } else {
-                        console.warn('⚠️ user_data.json not found, using defaults');
+                        // Production (e.g. GitHub Pages): static only
+                        const localResponse = await fetchJsonNoCache('./user_data.json');
+                        if (localResponse.ok) {
+                            localUserData = await localResponse.json();
+                            console.log('✅ Loaded user_data.json successfully');
+                        } else {
+                            console.warn('⚠️ user_data.json not found, using defaults');
+                        }
                     }
                 } catch (e) {
                     console.warn("Failed to load user_data.json", e);
@@ -358,11 +413,28 @@ const App: React.FC = () => {
 
                 setCharacterImages(finalImages);
 
-                const sanitizedCategories = savedTags.length > 0 ? savedTags.map(cat => ({
-                    ...cat,
-                    tags: cat.tags.map(tag => ({ ...tag, color: cat.color })),
-                    selectionMode: cat.selectionMode || (cat.name === '勢力' ? 'single' : 'multiple')
-                })) : (projectData.tagCategories || []).map(cat => ({
+                // Merge TAG Categories: Priority order:
+                // 1. user_data.json (if has tags)
+                // 2. localStorage (savedTags)
+                // 3. cr_data.json (projectData)
+                const userTags = localUserData.tagCategories || [];
+                let finalTags = [];
+                
+                if (userTags.length > 0) {
+                    // Use user_data.json tags (highest priority)
+                    finalTags = userTags;
+                    console.log('✅ Using TAG categories from user_data.json');
+                } else if (savedTags.length > 0) {
+                    // Fallback to localStorage
+                    finalTags = savedTags;
+                    console.log('✅ Using TAG categories from localStorage');
+                } else {
+                    // Fallback to cr_data.json
+                    finalTags = projectData.tagCategories || [];
+                    console.log('✅ Using TAG categories from cr_data.json');
+                }
+
+                const sanitizedCategories = finalTags.map(cat => ({
                     ...cat,
                     tags: cat.tags.map(tag => ({ ...tag, color: cat.color })),
                     selectionMode: cat.selectionMode || (cat.name === '勢力' ? 'single' : 'multiple')
@@ -386,6 +458,9 @@ const App: React.FC = () => {
     useEffect(() => {
         const saveData = async () => {
             try {
+                setSaveStatus('saving');
+                setSaveError(null);
+
                 // 1. Save to localStorage (Legacy/Backup)
                 const appData: AppData = { characters, relationships, tagCategories, characterImages };
                 localStorage.setItem('characterMapData', JSON.stringify(appData));
@@ -403,6 +478,7 @@ const App: React.FC = () => {
                         return acc;
                     }, {} as any),
                     relationships: relationships,  // Save all relationships
+                    tagCategories: tagCategories,  // Save TAG categories
                     characterImages: characterImages,  // Save all character images
                     deletedRelationshipIds: Array.from(deletedRelationshipIds), // Save deleted IDs
                     deletedImageIds: Array.from(deletedImageIds) // Save deleted Image IDs
@@ -413,18 +489,48 @@ const App: React.FC = () => {
                 
                 if (isLocalDev) {
                     // 本地開發：使用 API 寫入檔案
-                    await fetch('/CR_PLAN/api/save-metadata', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(userDataToSave)
-                    });
+                    const prefix = getApiPrefix();
+                    const apiCandidates = [`${prefix}/api/save-metadata`, `/api/save-metadata`].filter((v, i, a) => a.indexOf(v) === i);
+                    let saved = false;
+                    let lastErr: any = null;
+
+                    for (const apiUrl of apiCandidates) {
+                        try {
+                            const res = await fetch(apiUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(userDataToSave)
+                            });
+                            if (!res.ok) {
+                                lastErr = new Error(`Save API failed: ${apiUrl} (${res.status})`);
+                                continue;
+                            }
+                            const data = await res.json().catch(() => ({}));
+                            if (data && data.success === false) {
+                                lastErr = new Error(data.error || 'Save API returned success=false');
+                                continue;
+                            }
+                            saved = true;
+                            break;
+                        } catch (e) {
+                            lastErr = e;
+                        }
+                    }
+
+                    if (!saved) throw lastErr || new Error('Save failed: no API endpoint available');
+
+                    setSaveStatus('saved');
+                    setLastSavedAt(Date.now());
                 } else {
                     // GitHub Pages：只能讀取，不能寫入
                     console.log('⚠️ 雲端模式：資料只能讀取，無法儲存編輯');
+                    setSaveStatus('readonly');
                 }
 
             } catch (e: any) {
                 console.error("Failed to save data", e);
+                setSaveStatus('error');
+                setSaveError(e?.message || String(e));
                 if (e.name === 'QuotaExceededError' || e.code === 22) {
                     const now = Date.now();
                     if (now - (window as any).lastQuotaAlert > 5000 || !(window as any).lastQuotaAlert) {
@@ -745,6 +851,19 @@ const App: React.FC = () => {
                     {renderView()}
                 </ErrorBoundary>
             </main>
+
+            {/* Save Status HUD */}
+            <div className="fixed bottom-3 right-3 z-50 rounded-md border border-gray-700 bg-gray-950/80 px-3 py-2 text-xs text-gray-200 backdrop-blur">
+                {saveStatus === 'saving' && <div>儲存中…</div>}
+                {saveStatus === 'saved' && (
+                    <div>
+                        已儲存{lastSavedAt ? `（${new Date(lastSavedAt).toLocaleTimeString()}）` : ''}
+                    </div>
+                )}
+                {saveStatus === 'readonly' && <div>雲端模式：唯讀（不會寫入）</div>}
+                {saveStatus === 'error' && <div className="text-red-300">儲存失敗：{saveError || '未知錯誤'}</div>}
+                {saveStatus === 'idle' && <div className="text-gray-400">未變更</div>}
+            </div>
 
             {isCharacterEditorOpen && selectedCharacter && (
                 <CharacterEditorModal

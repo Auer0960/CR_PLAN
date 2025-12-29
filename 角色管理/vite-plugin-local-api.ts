@@ -64,9 +64,11 @@ export default function localApiPlugin(): Plugin {
                         if (fs.existsSync(USER_DATA_FILE)) {
                             const data = fs.readFileSync(USER_DATA_FILE, 'utf-8');
                             res.setHeader('Content-Type', 'application/json');
+                            res.setHeader('Cache-Control', 'no-store');
                             res.end(data);
                         } else {
                             res.setHeader('Content-Type', 'application/json');
+                            res.setHeader('Cache-Control', 'no-store');
                             res.end(JSON.stringify({}));
                         }
                     } catch (error) {
@@ -98,10 +100,12 @@ export default function localApiPlugin(): Plugin {
 
                         res.statusCode = 200;
                         res.setHeader('Content-Type', 'application/json');
+                        res.setHeader('Cache-Control', 'no-store');
                         res.end(JSON.stringify({ success: true, message: 'Metadata saved' }));
                     } catch (error) {
                         console.error('Error saving metadata:', error);
                         res.statusCode = 500;
+                        res.setHeader('Cache-Control', 'no-store');
                         res.end(JSON.stringify({ success: false, error: 'Failed to save metadata' }));
                     }
                     return;
