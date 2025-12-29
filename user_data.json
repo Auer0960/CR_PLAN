@@ -549,14 +549,6 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "6qqddcje8oyut5f80bo2s",
-      "source": "dbea6aecc7b3",
-      "target": "f608774fa988",
-      "label": "曾有協同亦有對立的交錯",
-      "description": "曾有協同亦有對立的交錯",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "ng6z8v812hkgzfnlhl53g",
       "source": "5427409afb20",
       "target": "f608774fa988",
@@ -1157,14 +1149,6 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "c49c50cd7bb3",
-      "source": "1a4889cddbd5",
-      "target": "640afe95cf4c",
-      "label": "旗下藝人/受害者",
-      "description": "旗下藝人/受害者（長期利用與施暴）",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "b1efa8737a2c",
       "source": "1a4889cddbd5",
       "target": "b38923b3d3ed",
@@ -1178,14 +1162,6 @@
       "target": "6b77aca76c61",
       "label": "潛規則對象",
       "description": "潛規則對象（視為有價值的商品）",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "283ce2d6a0ff",
-      "source": "640afe95cf4c",
-      "target": "1a4889cddbd5",
-      "label": "天堂之門製作人／HL公司...",
-      "description": "天堂之門製作人／HL公司高層，長期虐待控制者，她曾想刺殺的仇恨對象",
       "arrowStyle": "arrow"
     },
     {
@@ -1290,6 +1266,22 @@
       "target": "6b77aca76c61",
       "label": "PUA前男友",
       "description": "以「小寶貝」稱呼並宣稱其「只屬於我」，展現強烈佔有與控制。\n第一章已成為前男友",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "f6b08e3f-73f0-44e8-b3c5-f666327088eb",
+      "source": "640afe95cf4c",
+      "target": "1a4889cddbd5",
+      "label": "恐懼",
+      "description": "天堂之門製作人／HL公司高層，長期虐待控制者，她曾想刺殺的仇恨對象",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "fefac5b6-b392-46bc-bc6f-c9456ee05062",
+      "source": "1a4889cddbd5",
+      "target": "640afe95cf4c",
+      "label": "加害",
+      "description": "旗下藝人/受害者（長期利用與施暴）",
       "arrowStyle": "arrow"
     }
   ],
@@ -1803,7 +1795,10 @@
     "99d820c0-b915-4624-928e-cde2ddd90481",
     "a3eac2c3-dd56-49d7-9398-9a91e679b484",
     "iyyl376amhiewonzz5khj8",
-    "a67d4620-7389-4725-bec3-92d4ea569cab"
+    "a67d4620-7389-4725-bec3-92d4ea569cab",
+    "6qqddcje8oyut5f80bo2s",
+    "283ce2d6a0ff",
+    "c49c50cd7bb3"
   ],
   "deletedImageIds": [
     "e95073b109ed",
