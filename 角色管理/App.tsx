@@ -278,8 +278,28 @@ const App: React.FC = () => {
                 savedCharacters.forEach(sc => {
                     if (!fileCharIds.has(sc.id)) {
                         mergedCharacters.push(sc);
+                        fileCharIds.add(sc.id); // Update set
                     }
                 });
+
+                // 3. If we have characters in User Data that are not in File or Saved (e.g. lost local storage), recover them
+                if (localUserData.characters) {
+                    Object.keys(localUserData.characters).forEach(id => {
+                        if (!fileCharIds.has(id)) {
+                            const manualData = localUserData.characters![id];
+                            // Try to guess name or use placeholder
+                            mergedCharacters.push({
+                                id: id,
+                                name: (manualData as any).name || "未知角色",
+                                notes: (manualData as any).notes || "此角色僅存在於關聯資料中，原始設定可能已遺失。",
+                                tagIds: manualData.tagIds || [],
+                                image: manualData.image,
+                                avatarPosition: manualData.avatarPosition
+                            });
+                            fileCharIds.add(id);
+                        }
+                    });
+                }
 
                 setCharacters(mergedCharacters);
 
@@ -468,8 +488,10 @@ const App: React.FC = () => {
                 // 2. Save to local file system (Primary for persistence)
                 const userDataToSave = {
                     characters: characters.reduce((acc, char) => {
-                        if (char.image || char.avatarPosition || (char.tagIds && char.tagIds.length > 0)) {
+                        if (char.image || char.avatarPosition || (char.tagIds && char.tagIds.length > 0) || char.name !== "新角色") {
                             acc[char.id] = {
+                                name: char.name, // Save name to avoid data loss
+                                notes: char.notes,
                                 image: char.image,
                                 avatarPosition: char.avatarPosition,
                                 tagIds: char.tagIds
