@@ -1237,10 +1237,10 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "84951629-78c8-43c7-88a6-6b05c81b52c2",
+      "id": "eebbad82-14eb-4b5d-aaf6-7164868e4e27",
       "source": "d177ad728f12",
       "target": "ff1694de6fb6",
-      "label": "跟隨",
+      "label": "追隨",
       "description": "一起鬼混的太妹，視佟月 霞為領頭大姐頭。",
       "arrowStyle": "arrow"
     }
@@ -1782,7 +1782,8 @@
     "48c0ed3ac4d1",
     "cc6c558a96a5",
     "b2267c182da8",
-    "0dd6367f9a24"
+    "0dd6367f9a24",
+    "84951629-78c8-43c7-88a6-6b05c81b52c2"
   ],
   "deletedImageIds": [
     "e95073b109ed",

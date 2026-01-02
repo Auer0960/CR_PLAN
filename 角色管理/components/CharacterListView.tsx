@@ -153,7 +153,9 @@ const CharacterListView: React.FC<CharacterListViewProps> = ({
                       loading="lazy"
                     />
                     <div className="absolute bottom-2 left-2 right-2">
-                      <h3 className="text-lg font-bold text-white truncate drop-shadow-lg">{character.name}</h3>
+                      <h3 className="inline-block max-w-full rounded-md bg-black/35 px-2 py-1 text-lg font-bold text-white truncate drop-shadow-lg backdrop-blur-[2px]">
+                        {character.name}
+                      </h3>
                     </div>
                   </div>
                   <div className="px-2 py-1.5 bg-gray-800/95">

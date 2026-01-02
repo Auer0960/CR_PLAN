@@ -1,6 +1,6 @@
 import React from 'react';
 import type { View } from '../types';
-import { GraphIcon, UsersIcon, SearchIcon, TagsIcon, SettingsIcon, ImageIcon, AnalyticsIcon } from './Icons';
+import { GraphIcon, UsersIcon, SearchIcon, TagsIcon, SettingsIcon, ImageIcon, AnalyticsIcon, TimelineIcon } from './Icons';
 
 interface SidebarProps {
   activeView: View;
@@ -49,6 +49,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onSetActiveView }) => {
       </NavItem>
       <NavItem label="Tag 使用分析" viewName="analytics" activeView={activeView} onClick={onSetActiveView}>
         <AnalyticsIcon className="w-6 h-6" />
+      </NavItem>
+      <NavItem label="時間軸" viewName="timeline" activeView={activeView} onClick={onSetActiveView}>
+        <TimelineIcon className="w-6 h-6" />
       </NavItem>
       <div className="flex-grow" />
       <NavItem label="設定" viewName="settings" activeView={activeView} onClick={onSetActiveView}>
