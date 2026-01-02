@@ -453,22 +453,6 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "ntlm9tz818ejwepmtxst",
-      "source": "f608774fa988",
-      "target": "3505f8f7462d",
-      "label": "上司與同事關係",
-      "description": "上司與同事關係，亦師亦友",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "7uo0kspdqgkz92m67eo4bd",
-      "source": "f608774fa988",
-      "target": "6b77aca76c61",
-      "label": "前經紀人",
-      "description": "前經紀人，有感情與責任在",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "b5gztycgcykx7ml5henvuq",
       "source": "c40b917152c4",
       "target": "b5e93ab34754",
@@ -482,14 +466,6 @@
       "target": "b38923b3d3ed",
       "label": "次子",
       "description": "次子（與萊斯所生）。雖然是與愛人所生，但因過往經歷導致感情喪失，曾派人追殺他。",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "73bfrfaeywhrf5reri1nda",
-      "source": "0d73fefdb6ec",
-      "target": "f608774fa988",
-      "label": "交好之盟友",
-      "description": "交好之盟友，能快速協同處置事件",
       "arrowStyle": "arrow"
     },
     {
@@ -706,14 +682,6 @@
       "target": "80b39e66ca5c",
       "label": "愛人/性關係",
       "description": "愛人/性關係（重要顧客）",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "0a4bbe34cb0c",
-      "source": "08918c7b5715",
-      "target": "dbea6aecc7b3",
-      "label": "上司與恩人",
-      "description": "上司與恩人，對其非常忠誠。",
       "arrowStyle": "arrow"
     },
     {
@@ -997,35 +965,11 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "0dd6367f9a24",
-      "source": "ff1694de6fb6",
-      "target": "5b0ba53871bb",
-      "label": "亞璃紗姐",
-      "description": "亞璃紗姐。極度崇拜其武藝（如拔刀術），不容許他人輕視她。",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "dfa18c243877",
       "source": "1a4889cddbd5",
       "target": "5427409afb20",
       "label": "仇恨",
       "description": "仇恨（認為他搶走了首領之位，且擋了自己的財路），意圖謀反",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "158d19bfd561",
-      "source": "1a4889cddbd5",
-      "target": "dbea6aecc7b3",
-      "label": "合作夥伴",
-      "description": "合作夥伴（共同策劃政變與毒品生意）",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "cc6c558a96a5",
-      "source": "1a4889cddbd5",
-      "target": "6b77aca76c61",
-      "label": "潛規則對象",
-      "description": "潛規則對象（視為有價值的商品）",
       "arrowStyle": "arrow"
     },
     {
@@ -1042,14 +986,6 @@
       "target": "5b0ba53871bb",
       "label": "義兄妹關係",
       "description": "義兄妹關係，信任其劍術與人品",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "b2267c182da8",
-      "source": "c5c6abfed105",
-      "target": "ff1694de6fb6",
-      "label": "義兄妹關係",
-      "description": "義兄妹關係，包容其叛逆個性",
       "arrowStyle": "arrow"
     },
     {
@@ -1082,14 +1018,6 @@
       "target": "5b0ba53871bb",
       "label": "姊妹",
       "description": "姊妹（分家與本家），仇恨且意圖取代的對象。亦是其影武者的本尊。",
-      "arrowStyle": "arrow"
-    },
-    {
-      "id": "5e1c15b8d34a",
-      "source": "dbea6aecc7b3",
-      "target": "1a4889cddbd5",
-      "label": "短期利益合作關係",
-      "description": "短期利益合作關係",
       "arrowStyle": "arrow"
     },
     {
@@ -1189,14 +1117,6 @@
       "arrowStyle": "arrow"
     },
     {
-      "id": "48c0ed3ac4d1",
-      "source": "3e5ac23d6fee",
-      "target": "5427409afb20",
-      "label": "救援者與被救者",
-      "description": "救援者與被救者；出於良知的選擇",
-      "arrowStyle": "arrow"
-    },
-    {
       "id": "b9f9d640-271d-4bb5-aa33-b17893cf7985",
       "source": "1a4889cddbd5",
       "target": "b38923b3d3ed",
@@ -1250,6 +1170,78 @@
       "target": "c5c6abfed105",
       "label": "信賴",
       "description": "值得信賴的二當家。",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "f2a745b8-7e76-45c9-a36b-96f015ec422a",
+      "source": "08918c7b5715",
+      "target": "dbea6aecc7b3",
+      "label": "敬重忠誠",
+      "description": "上司與恩人，對其非常忠誠。",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "364bf2e4-ec3f-44a7-8852-3a8f6fffe9ad",
+      "source": "1a4889cddbd5",
+      "target": "dbea6aecc7b3",
+      "label": "利益合作",
+      "description": "短期利益合作關係",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "b79c45d3-c834-4952-820b-c550a01485d3",
+      "source": "dbea6aecc7b3",
+      "target": "1a4889cddbd5",
+      "label": "利益合作",
+      "description": "短期利益合作關係",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "e3b37ab1-4505-4d51-85c0-27749e8db85b",
+      "source": "0d73fefdb6ec",
+      "target": "f608774fa988",
+      "label": "交好",
+      "description": "交好之盟友，能快速協同處置事件",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "1b23eb1e-a906-4fa8-b0e4-c29b3210266e",
+      "source": "f608774fa988",
+      "target": "3505f8f7462d",
+      "label": "屬下",
+      "description": "上司與同事關係，亦師亦友",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "eaeadcfd-1fac-4794-9d09-492a3e0b915e",
+      "source": "c5c6abfed105",
+      "target": "ff1694de6fb6",
+      "label": "無奈",
+      "description": "想引導走上正途，但這妹子用飆車的方式啊",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "8f041255-6950-4069-af91-fb55d094df7d",
+      "source": "ff1694de6fb6",
+      "target": "5b0ba53871bb",
+      "label": "崇拜",
+      "description": "亞璃紗姐。極度崇拜其武藝（如拔刀術），不容許他人輕視她。",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "527035ff-391a-434d-8cac-8c5b9325c424",
+      "source": "fb169b04a3bf",
+      "target": "5b0ba53871bb",
+      "label": "學習",
+      "description": "",
+      "arrowStyle": "arrow"
+    },
+    {
+      "id": "eebbad82-14eb-4b5d-aaf6-7164868e4e27",
+      "source": "d177ad728f12",
+      "target": "ff1694de6fb6",
+      "label": "追隨",
+      "description": "一起鬼混的太妹，視佟月 霞為領頭大姐頭。",
       "arrowStyle": "arrow"
     }
   ],
@@ -1780,7 +1772,18 @@
     "a8178cdnogelfsuuh7hx",
     "9bca1532-d425-4106-989b-07cfa61c1d88",
     "132fd83446b7",
-    "506dc71b1f8b"
+    "506dc71b1f8b",
+    "0a4bbe34cb0c",
+    "158d19bfd561",
+    "5e1c15b8d34a",
+    "73bfrfaeywhrf5reri1nda",
+    "7uo0kspdqgkz92m67eo4bd",
+    "ntlm9tz818ejwepmtxst",
+    "48c0ed3ac4d1",
+    "cc6c558a96a5",
+    "b2267c182da8",
+    "0dd6367f9a24",
+    "84951629-78c8-43c7-88a6-6b05c81b52c2"
   ],
   "deletedImageIds": [
     "e95073b109ed",

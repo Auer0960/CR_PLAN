@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 // Import types
-import type { AppData, Character, Relationship, TagCategory, CharacterImage, AiProvider, View, TagWithColor, ParsedData, Tag } from './types';
+import type { AppData, Character, Relationship, TagCategory, CharacterImage, AiProvider, View, TagWithColor, ParsedData, Tag, TimelineData } from './types';
 
 // Import services
 import { parseWithGemini } from './services/geminiService';
@@ -21,6 +21,7 @@ import ImageListView from './components/ImageListView';
 import ImageDetailModal from './components/ImageDetailModal';
 import TagAnalyticsView from './components/TagAnalyticsView';
 import ErrorBoundary from './components/ErrorBoundary';
+import TimelineView from './components/TimelineView';
 
 // A helper for generating default data
 function generateDefaultData(): AppData {
@@ -122,6 +123,12 @@ const App: React.FC = () => {
     const [relationships, setRelationships] = useState<Relationship[]>([]);
     const [tagCategories, setTagCategories] = useState<TagCategory[]>([]);
     const [characterImages, setCharacterImages] = useState<CharacterImage[]>([]);
+    const [timelineData, setTimelineData] = useState<TimelineData>({
+        gameStartYear: 200,
+        events: [],
+        locations: [],
+        tags: [],
+    });
 
     // UI state
     const [activeView, setActiveView] = useState<View>('graph');
@@ -640,6 +647,62 @@ const App: React.FC = () => {
                 }));
                 setTagCategories(sanitizedCategories);
 
+                // Load Timeline Data
+                try {
+                    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                    let timelineData: TimelineData = {
+                        gameStartYear: 200,
+                        events: [],
+                        locations: [],
+                        tags: [],
+                    };
+
+                    if (isLocalDev) {
+                        // Try API first
+                        const prefix = getApiPrefix();
+                        const apiCandidates = [`${prefix}/api/timeline-data`, `/api/timeline-data`].filter((v, i, a) => a.indexOf(v) === i);
+                        let loaded = false;
+
+                        for (const apiUrl of apiCandidates) {
+                            try {
+                                const apiRes = await fetchJsonNoCache(apiUrl);
+                                if (apiRes.ok) {
+                                    timelineData = await apiRes.json();
+                                    console.log(`✅ Loaded timeline data from API: ${apiUrl}`);
+                                    loaded = true;
+                                    break;
+                                }
+                            } catch {
+                                // try next candidate
+                            }
+                        }
+
+                        if (!loaded) {
+                            // Fallback: try static file
+                            const timelineResponse = await fetchJsonNoCache('./timeline_data.json');
+                            if (timelineResponse.ok) {
+                                timelineData = await timelineResponse.json();
+                                console.log('✅ Loaded timeline_data.json (static fallback)');
+                            } else {
+                                console.warn('⚠️ timeline data not found, using defaults');
+                            }
+                        }
+                    } else {
+                        // Production: static only
+                        const timelineResponse = await fetchJsonNoCache('./timeline_data.json');
+                        if (timelineResponse.ok) {
+                            timelineData = await timelineResponse.json();
+                            console.log('✅ Loaded timeline_data.json successfully');
+                        } else {
+                            console.warn('⚠️ timeline_data.json not found, using defaults');
+                        }
+                    }
+
+                    setTimelineData(timelineData);
+                } catch (e) {
+                    console.warn("Failed to load timeline data", e);
+                }
+
             } catch (error) {
                 console.error("Failed to load data:", error);
                 const defaultData = generateDefaultData();
@@ -747,6 +810,54 @@ const App: React.FC = () => {
         return () => clearTimeout(timeoutId);
 
     }, [characters, relationships, tagCategories, characterImages, deletedRelationshipIds, deletedImageIds]);
+
+    // Save timeline data
+    useEffect(() => {
+        const saveTimelineData = async () => {
+            try {
+                const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                
+                if (isLocalDev) {
+                    // Save via API
+                    const prefix = getApiPrefix();
+                    const apiCandidates = [`${prefix}/api/save-timeline`, `/api/save-timeline`].filter((v, i, a) => a.indexOf(v) === i);
+                    
+                    for (const apiUrl of apiCandidates) {
+                        try {
+                            const res = await fetch(apiUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(timelineData)
+                            });
+                            if (res.ok) {
+                                const data = await res.json().catch(() => ({}));
+                                if (data && data.success !== false) {
+                                    console.log('✅ Timeline data saved');
+                                    break;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('Failed to save timeline data via API:', e);
+                        }
+                    }
+                } else {
+                    // Production: save to localStorage as backup
+                    localStorage.setItem('timelineData', JSON.stringify(timelineData));
+                    console.log('⚠️ Timeline data saved to localStorage (cloud mode)');
+                }
+            } catch (e) {
+                console.error("Failed to save timeline data", e);
+            }
+        };
+
+        // Debounce save
+        const timeoutId = setTimeout(saveTimelineData, 1000);
+        return () => clearTimeout(timeoutId);
+    }, [timelineData]);
+
+    const handleSaveTimeline = (data: TimelineData) => {
+        setTimelineData(data);
+    };
 
     const allTags = useMemo((): TagWithColor[] => tagCategories.flatMap(category =>
         category.tags.map(tag => ({ ...tag, color: category.color }))
@@ -1007,6 +1118,14 @@ const App: React.FC = () => {
                 return <TagManagerView tagCategories={tagCategories} onUpdate={setTagCategories} />;
             case 'analytics':
                 return <TagAnalyticsView tagCategories={tagCategories} characterImages={characterImages} characters={characters} />;
+            case 'timeline':
+                return <TimelineView
+                    timelineData={timelineData}
+                    onUpdateTimeline={handleSaveTimeline}
+                    characters={characters}
+                    allTags={allTags}
+                    onCharacterClick={handleCharacterClick}
+                />;
             case 'settings':
                 return <SettingsView
                     onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}

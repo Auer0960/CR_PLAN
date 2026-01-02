@@ -9,7 +9,8 @@
     "build": "node scripts/copy_user_data.js && vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist -b deploy"
+    "deploy": "gh-pages -d dist -b deploy",
+    "import:timeline:csv": "node scripts/import_cr_csv_to_timeline.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.19.0",

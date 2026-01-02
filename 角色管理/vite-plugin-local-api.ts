@@ -23,6 +23,7 @@ if (fs.existsSync(envPath)) {
 
 // Define paths
 const USER_DATA_FILE = path.resolve(__dirname, 'user_data.json');
+const TIMELINE_DATA_FILE = path.resolve(__dirname, 'public', 'timeline_data.json');
 let CHARACTERS_DIR = envConfig.CHARACTERS_DIR || 'c:/Users/Auer0960/Desktop/專區/CR專案/文件/CursorAI_CR專用/CR母專案劇情資料/character'; // Fallback to original if missing
 
 // Resolve relative paths
@@ -107,6 +108,61 @@ export default function localApiPlugin(): Plugin {
                         res.statusCode = 500;
                         res.setHeader('Cache-Control', 'no-store');
                         res.end(JSON.stringify({ success: false, error: 'Failed to save metadata' }));
+                    }
+                    return;
+                }
+
+                // API: Get Timeline Data (支援 /api/timeline-data 和 /CR_PLAN/api/timeline-data)
+                if ((url === '/api/timeline-data' || url === '/CR_PLAN/api/timeline-data') && req.method === 'GET') {
+                    try {
+                        if (fs.existsSync(TIMELINE_DATA_FILE)) {
+                            const data = fs.readFileSync(TIMELINE_DATA_FILE, 'utf-8');
+                            res.setHeader('Content-Type', 'application/json');
+                            res.setHeader('Cache-Control', 'no-store');
+                            res.end(data);
+                        } else {
+                            // Return default timeline data
+                            const defaultData = {
+                                gameStartYear: 200,
+                                events: [],
+                                locations: [],
+                                locationNodes: [],
+                                tags: []
+                            };
+                            res.setHeader('Content-Type', 'application/json');
+                            res.setHeader('Cache-Control', 'no-store');
+                            res.end(JSON.stringify(defaultData));
+                        }
+                    } catch (error) {
+                        console.error('Error reading timeline data:', error);
+                        res.statusCode = 500;
+                        res.end(JSON.stringify({ error: 'Failed to read timeline data' }));
+                    }
+                    return;
+                }
+
+                // API: Save Timeline Data (支援 /api/save-timeline 和 /CR_PLAN/api/save-timeline)
+                if ((url === '/api/save-timeline' || url === '/CR_PLAN/api/save-timeline') && req.method === 'POST') {
+                    try {
+                        const timelineData = await parseBody(req);
+                        
+                        // Ensure directory exists
+                        const timelineDir = path.dirname(TIMELINE_DATA_FILE);
+                        if (!fs.existsSync(timelineDir)) {
+                            fs.mkdirSync(timelineDir, { recursive: true });
+                        }
+
+                        fs.writeFileSync(TIMELINE_DATA_FILE, JSON.stringify(timelineData, null, 2));
+
+                        res.statusCode = 200;
+                        res.setHeader('Content-Type', 'application/json');
+                        res.setHeader('Cache-Control', 'no-store');
+                        res.end(JSON.stringify({ success: true, message: 'Timeline data saved' }));
+                    } catch (error) {
+                        console.error('Error saving timeline data:', error);
+                        res.statusCode = 500;
+                        res.setHeader('Cache-Control', 'no-store');
+                        res.end(JSON.stringify({ success: false, error: 'Failed to save timeline data' }));
                     }
                     return;
                 }
