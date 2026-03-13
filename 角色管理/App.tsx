@@ -8,6 +8,7 @@ import type { AppData, Character, Relationship, TagCategory, CharacterImage, AiP
 import { parseWithGemini } from './services/geminiService';
 import { parseWithOpenAI } from './services/openaiService';
 import { loadAppData, saveAppData, loadTimelineData, saveTimelineData, getUserByCode } from './services/supabaseService';
+import { supabase } from './supabase';
 
 // Import components
 import Sidebar from './components/Sidebar';
@@ -159,6 +160,10 @@ const App: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
     const [isLoginChecked, setIsLoginChecked] = useState(false);
     const modifiedCharacterIdsRef = React.useRef<Set<string>>(new Set());
+
+    // Realtime sync toast
+    const [realtimeToast, setRealtimeToast] = useState<string | null>(null);
+    const isSavingRef = React.useRef(false); // 自己儲存時不重新載入
     // Prevents save effects from firing before the initial data load completes
     const isDataReadyRef = React.useRef(false);
     // Snapshot of the character+relationships taken when the editor opens, used for diff on close
@@ -822,6 +827,42 @@ const App: React.FC = () => {
         localStorage.removeItem('userCode');
     };
 
+    // Supabase Realtime — 有人更新資料時自動重新載入
+    useEffect(() => {
+        if (!isDataReadyRef.current) return;
+
+        const channel = supabase
+            .channel('app_data_realtime')
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'app_data',
+                filter: 'key=eq.main',
+            }, async () => {
+                // 自己儲存觸發的通知，略過
+                if (isSavingRef.current) return;
+                // 正在編輯角色時不打斷，只在背景靜默更新
+                const fresh = await loadAppData();
+                if (!fresh) return;
+                setCharacters(fresh.characters || []);
+                setRelationships(fresh.relationships || []);
+                setCharacterImages(fresh.characterImages || []);
+                const cats = (fresh.tagCategories || []).map((cat: any) => ({
+                    ...cat,
+                    tags: cat.tags.map((tag: any) => ({ ...tag, color: cat.color })),
+                    selectionMode: cat.selectionMode || (cat.name === '勢力' ? 'single' : 'multiple'),
+                }));
+                setTagCategories(cats);
+                setGlossaryTerms(fresh.glossaryTerms || []);
+                // 顯示 toast
+                setRealtimeToast('資料已同步更新');
+                setTimeout(() => setRealtimeToast(null), 3000);
+            })
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+    }, [isDataReadyRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
+
     // Save data to Supabase (single source, works in both local dev and production)
     useEffect(() => {
         if (!isDataReadyRef.current) return; // 資料尚未載入完成，不儲存
@@ -829,6 +870,7 @@ const App: React.FC = () => {
 
         const saveData = async () => {
             try {
+                isSavingRef.current = true;
                 setSaveStatus('saving');
                 setSaveError(null);
 
@@ -845,11 +887,14 @@ const App: React.FC = () => {
                 await saveAppData(appData);
                 setSaveStatus('saved');
                 setLastSavedAt(Date.now());
+                // 延遲解鎖，讓 Realtime 通知先到再略過
+                setTimeout(() => { isSavingRef.current = false; }, 2000);
 
             } catch (e: any) {
                 console.error("Failed to save data", e);
                 setSaveStatus('error');
                 setSaveError(e?.message || String(e));
+                isSavingRef.current = false;
             }
         };
 
@@ -1303,6 +1348,14 @@ const App: React.FC = () => {
                     {renderView()}
                 </ErrorBoundary>
             </main>
+
+            {/* Realtime sync toast */}
+            {realtimeToast && (
+                <div className="fixed bottom-14 right-3 z-50 flex items-center gap-2 rounded-md border border-blue-500/50 bg-blue-900/80 px-3 py-2 text-xs text-blue-200 backdrop-blur shadow-lg animate-fadeIn">
+                    <span className="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                    {realtimeToast}
+                </div>
+            )}
 
             {/* Save Status HUD - 兩個格子 */}
             <div className="fixed bottom-3 right-3 z-50 flex gap-2">
