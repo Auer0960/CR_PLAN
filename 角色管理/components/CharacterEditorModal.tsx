@@ -432,9 +432,21 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
     return { outgoingList: outgoing, incomingList: incoming };
   }, [allRelationships, character.id, allCharacters]);
 
+  const [relFormError, setRelFormError] = useState('');
+
   const handleAddRelationship = (e: React.FormEvent) => {
     e.preventDefault();
     const targetChar = allCharacters.find(c => c.id === newRelTarget);
+
+    if (!newRelTarget || !targetChar) {
+      setRelFormError('請從下拉選單選擇目標角色');
+      return;
+    }
+    if (!newRelLabel.trim()) {
+      setRelFormError('請填寫關係標籤');
+      return;
+    }
+    setRelFormError('');
 
     if (targetChar && newRelLabel) {
       onUpdateRelationships(prev => {
@@ -962,6 +974,11 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                 <h3 className="text-2xl font-bold">管理關係</h3>
                 <form onSubmit={handleAddRelationship} className="bg-gray-900/50 p-4 rounded-lg border border-gray-700">
                   <h4 className="font-semibold mb-3">{editingRelId ? '編輯關係' : '新增關係'}</h4>
+                  {relFormError && (
+                    <div className="mb-3 px-3 py-2 bg-red-900/50 border border-red-600 rounded-md text-red-300 text-sm">
+                      ⚠ {relFormError}
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div className="md:col-span-2 relative" ref={targetInputRef}>
                       <label htmlFor="newRelTarget" className="block text-sm font-medium text-gray-300 mb-1">目標角色</label>
@@ -971,31 +988,51 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                         value={searchTargetName}
                         onChange={(e) => {
                           setSearchTargetName(e.target.value);
+                          setNewRelTarget(''); // 重新輸入時清除已選 ID
                           setIsTargetDropdownOpen(true);
+                          setRelFormError('');
                         }}
                         onFocus={() => setIsTargetDropdownOpen(true)}
-                        placeholder="搜尋角色..."
+                        onBlur={() => {
+                          // 延遲關閉，讓點擊下拉項目的事件先觸發
+                          setTimeout(() => {
+                            setIsTargetDropdownOpen(false);
+                            // 若輸入了名字但沒從下拉選取，清除輸入
+                            if (searchTargetName && !newRelTarget) {
+                              setSearchTargetName('');
+                            }
+                          }, 150);
+                        }}
+                        placeholder="搜尋角色名稱後從清單選取..."
                         autoComplete="off"
-                        className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500"
+                        className={`w-full p-2 bg-gray-900 border rounded-md focus:ring-2 focus:ring-indigo-500 ${
+                          relFormError && relFormError.includes('目標') ? 'border-red-500' : 'border-gray-600'
+                        }`}
                       />
+                      {newRelTarget && (
+                        <span className="absolute right-2 top-9 text-green-400 text-sm">✓</span>
+                      )}
                       {isTargetDropdownOpen && (
                         <div className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                          {filteredTargetCharacters.map(c => (
-                            <div key={c.id} onClick={() => {
+                          {filteredTargetCharacters.length > 0 ? filteredTargetCharacters.map(c => (
+                            <div key={c.id} onMouseDown={(e) => e.preventDefault()} onClick={() => {
                               setNewRelTarget(c.id);
                               setSearchTargetName(c.name);
                               setIsTargetDropdownOpen(false);
+                              setRelFormError('');
                             }}
                               className="px-4 py-2 hover:bg-indigo-600 cursor-pointer">
                               {c.name}
                             </div>
-                          ))}
+                          )) : (
+                            <div className="px-4 py-2 text-gray-500 text-sm">找不到符合的角色</div>
+                          )}
                         </div>
                       )}
                     </div>
                     <div>
                       <label htmlFor="newRelLabel" className="block text-sm font-medium text-gray-300 mb-1">關係標籤</label>
-                      <input id="newRelLabel" type="text" value={newRelLabel} onChange={e => setNewRelLabel(e.target.value)} placeholder="例如：朋友" className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500" />
+                      <input id="newRelLabel" type="text" value={newRelLabel} onChange={e => { setNewRelLabel(e.target.value); setRelFormError(''); }} placeholder="例如：朋友" className={`w-full p-2 bg-gray-900 border rounded-md focus:ring-2 focus:ring-indigo-500 ${relFormError && relFormError.includes('標籤') ? 'border-red-500' : 'border-gray-600'}`} />
                     </div>
                     <div>
                       <label htmlFor="newRelDirection" className="block text-sm font-medium text-gray-300 mb-1">方向</label>
