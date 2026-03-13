@@ -44,9 +44,11 @@ const CharacterListView: React.FC<CharacterListViewProps> = ({
     let filtered = characters;
 
     if (searchTerm) {
+      const q = searchTerm.toLowerCase();
       filtered = filtered.filter((character) =>
-        character.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        character.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+        character.name.toLowerCase().includes(q) ||
+        character.notes?.toLowerCase().includes(q) ||
+        (character.characterCode || '').toLowerCase().includes(q)
       );
     }
 
@@ -152,10 +154,15 @@ const CharacterListView: React.FC<CharacterListViewProps> = ({
                       style={{ imageRendering: 'auto' }}
                       loading="lazy"
                     />
-                    <div className="absolute bottom-2 left-2 right-2">
+                    <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between gap-1">
                       <h3 className="inline-block max-w-full rounded-md bg-black/35 px-2 py-1 text-lg font-bold text-white truncate drop-shadow-lg backdrop-blur-[2px]">
                         {character.name}
                       </h3>
+                      {character.characterCode && (
+                        <span className="flex-shrink-0 rounded bg-black/50 px-1.5 py-0.5 text-xs font-mono text-gray-300 backdrop-blur-[2px]">
+                          {character.characterCode}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="px-2 py-1.5 bg-gray-800/95">

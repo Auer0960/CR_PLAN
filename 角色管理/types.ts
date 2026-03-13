@@ -6,14 +6,48 @@ export interface CharacterProfile {
   quote?: string;
 }
 
+export interface ProfileField {
+  id: string;
+  label: string;
+  content: string;
+}
+
+export interface ModLogChange {
+  field: string;   // field key
+  label: string;   // 顯示名稱
+  before: string;  // 修改前
+  after: string;   // 修改後
+}
+
+export interface ModLogEntry {
+  at: number;   // unix timestamp
+  by: string;   // 使用者名稱
+  note?: string;  // 修改備註
+  changes?: ModLogChange[];
+}
+
+export interface AppUser {
+  code: string;
+  name: string;
+}
+
 export interface Character {
   id: string;
   name: string;
+  characterCode?: string; // 角色編號，如 cr031，全局唯一
+  birthday?: string;      // 生日，格式 MM/DD，如 04/15
+  title?: string;         // 稱號
+  height?: string;        // 身高，如 175cm
+  weight?: string;        // 體重，如 65kg
+  bust?: string;          // 胸圍，如 88cm
+  introduction?: string;  // 一語介紹（單行短句）
   notes: string;
   tagIds: string[];
   image?: string; // URL or base64 data URI for avatar
   avatarPosition?: { x: number; y: number };
   profile?: CharacterProfile;
+  profileFields?: ProfileField[];
+  modLog?: ModLogEntry[];
 }
 
 export interface Relationship {
@@ -52,6 +86,29 @@ export interface CharacterImage {
   notes?: string;
 }
 
+export interface GlossaryDraft {
+  name: string;
+  category: string;
+  fields: ProfileField[];
+  aliases: string[];
+  relatedCharacterIds: string[];
+  relatedEventIds: string[];
+  savedAt: number;
+}
+
+export interface GlossaryTerm {
+  id: string;
+  name: string;
+  category: string;
+  fields?: ProfileField[];
+  aliases?: string[];
+  relatedCharacterIds: string[];
+  relatedEventIds: string[];
+  modLog?: ModLogEntry[];
+  createdAt: number;
+  updatedAt: number;
+}
+
 // Data structure returned by AI services
 export interface ParsedData {
   characters: { name: string }[];
@@ -65,13 +122,14 @@ export interface AiTagSuggestion {
 
 export type AiProvider = 'gemini' | 'openai';
 
-export type View = 'graph' | 'characters' | 'images' | 'search' | 'tags' | 'settings' | 'analytics' | 'timeline';
+export type View = 'graph' | 'characters' | 'images' | 'search' | 'tags' | 'settings' | 'analytics' | 'timeline' | 'glossary';
 
 export interface AppData {
   characters: Character[];
   relationships: Relationship[];
   tagCategories: TagCategory[];
   characterImages: CharacterImage[];
+  glossaryTerms?: GlossaryTerm[];
   deletedRelationshipIds?: string[];
   deletedImageIds?: string[];
 }

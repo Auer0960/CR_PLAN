@@ -1,0 +1,1160 @@
+{
+  "gameStartYear": 200,
+  "events": [
+    {
+      "id": "EV20",
+      "title": "亞當計畫開始",
+      "startYear": -48,
+      "endYear": -48,
+      "isContinuous": false,
+      "size": "large",
+      "parentEventIds": [],
+      "relatedEventIds": [],
+      "characterIds": [
+        "b5e93ab34754",
+        "73b7da68fe65"
+      ],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "由全球頂尖的科學家與醫學專家組成的計畫，致力於突破生命科學的疆界，開創人類健康的新紀元。\n執行人類生存極限研究、細胞再生與抗衰老技術、腦缺陷補全與神經強化、病毒免疫與對策的研究。",
+      "deepInfo": "初期:\n由米契爾斯家族所建立。\n嘗試著將各種動植物的DNA編輯到人體\n\n關鍵期:\n南極科研隊發現一顆女性眼球，沒有腐爛，甚至還有微弱的生物活性。\n無法判定物種、活性異常、且切割後會自我修復。\n因此用其眼球提取DNA，嘗試複製。\n\n後期:\n試圖複製DNA進行培養，但因基因序列受到損壞，導致無法直接培養完整器官進行複製。\n最後決定以人體DNA補足缺失的基因序列，並培養幹細胞注入身體中。\n\n為縮短整個進程，還需要「催化劑B」來進一步加速受試者基因融合。\n（市面上變強催化劑的原型，因為會使其活躍化）\n\n後續引致大瘟疫、覺醒者等等…",
+      "notes": "",
+      "location": "GeneX實驗室",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767335422213,
+      "verticalIndex": 2
+    },
+    {
+      "id": "EV1",
+      "title": "亞當計畫中期",
+      "startYear": -38,
+      "endYear": -38,
+      "isContinuous": false,
+      "size": "large",
+      "parentEventIds": [
+        "EV20"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [
+        "73b7da68fe65",
+        "3e5ac23d6fee",
+        "c40b917152c4",
+        "b5e93ab34754"
+      ],
+      "npcNames": [],
+      "tagIds": [
+        "tag-1",
+        "tag-2"
+      ],
+      "publicInfo": "芙瑞妲加入研究團隊，被父親出賣，遭到剛鐸玩弄身體的開始。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767335417004,
+      "verticalIndex": 0
+    },
+    {
+      "id": "EV11",
+      "title": "南極科研團發現原初基因",
+      "startYear": -38,
+      "endYear": -38,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV20"
+      ],
+      "relatedEventIds": [
+        "EV1"
+      ],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [
+        "tag-3",
+        "tag-4"
+      ],
+      "publicInfo": "南極科研隊發現一顆女性眼球，沒有腐爛，甚至還有微弱的生物活性。\n無法判定物種、活性異常、且切割後會自我修復。\n因此用其眼球提取DNA，嘗試複製。\n\n此次發現讓實驗室的亞當計畫誕生。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "EV2",
+      "title": "加姆組織佔領斯薩魯",
+      "startYear": -38,
+      "endYear": 0,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [
+        "馬爾墨",
+        "拉兀"
+      ],
+      "tagIds": [
+        "tag-5",
+        "tag-6"
+      ],
+      "publicInfo": "",
+      "deepInfo": "",
+      "notes": "",
+      "location": "斯薩魯",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "EV9",
+      "title": "芙瑞妲獲得不老不死",
+      "startYear": -35,
+      "endYear": -35,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV20"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [
+        "c40b917152c4",
+        "3e5ac23d6fee",
+        "73b7da68fe65",
+        "b5e93ab34754"
+      ],
+      "npcNames": [
+        "久世 紗羅(Sara)"
+      ],
+      "tagIds": [],
+      "publicInfo": "礙於寡頭們以及來自剛鐸的壓力，芙瑞妲最後決定自行獻身，但一開始誤以為失敗，傑在剛鐸發洩下，芙瑞妲受傷而出現瞬間痊癒症狀，成功獲得不老不死。\n\n剛鐸‧拉薩德為了測試芙瑞妲是否已經成為完美人類，因而對其虐待、殺害、凌遲、斷肢，埋下芙瑞妲憎恨開端的伏筆。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "GeneX實驗室",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "EV15",
+      "title": "路西恩出生",
+      "startYear": -33,
+      "endYear": -33,
+      "isContinuous": false,
+      "size": "large",
+      "parentEventIds": [
+        "EV20"
+      ],
+      "relatedEventIds": [
+        "EV7"
+      ],
+      "characterIds": [
+        "5427409afb20"
+      ],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "路西恩誕生，並在實驗室受到長期折磨與實驗。\n在這過程中，誕生了Y病毒的副產品。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "GeneX實驗室",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767336609140,
+      "verticalIndex": 4
+    },
+    {
+      "id": "EV17",
+      "title": "提煉出Y病毒",
+      "startYear": -30,
+      "endYear": -30,
+      "isContinuous": false,
+      "size": "large",
+      "parentEventIds": [
+        "EV20"
+      ],
+      "relatedEventIds": [
+        "EV8",
+        "EV3"
+      ],
+      "characterIds": [
+        "c40b917152c4",
+        "5427409afb20",
+        "3e5ac23d6fee",
+        "8635cd035e37"
+      ],
+      "npcNames": [],
+      "tagIds": [
+        "tag-2",
+        "tag-4"
+      ],
+      "publicInfo": "以路西恩的基因分離出原初基因，並以病毒做為載體植入人體，但因具有極高的突變速率，在不同宿主體內可能產生基因重組，極易激起免疫排斥反應，甚至成為免疫風暴，因而無法作用。\n\n被芙瑞妲與海爾廢棄的研究項目。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767337513370,
+      "verticalIndex": 5
+    },
+    {
+      "id": "EV16",
+      "title": "西奧多出生",
+      "startYear": -27,
+      "endYear": -27,
+      "isContinuous": false,
+      "size": "large",
+      "parentEventIds": [
+        "EV20"
+      ],
+      "relatedEventIds": [
+        "EV7"
+      ],
+      "characterIds": [
+        "b38923b3d3ed"
+      ],
+      "npcNames": [
+        "西奧多(伊恩)"
+      ],
+      "tagIds": [],
+      "publicInfo": "因芙瑞妲懷胎時，羊水穿刺採集的西奧多基因為完美基因。\n加之路西恩受折磨，勾起海爾惻隱之心，開始懷疑研究目的。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "GeneX實驗室",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767336278169,
+      "verticalIndex": 0
+    },
+    {
+      "id": "EV7",
+      "title": "路西恩＆西奧多救援事件",
+      "startYear": -27,
+      "endYear": -27,
+      "isContinuous": false,
+      "size": "large",
+      "parentEventIds": [
+        "EV20",
+        "EV15",
+        "EV16"
+      ],
+      "relatedEventIds": [
+        "EV8"
+      ],
+      "characterIds": [
+        "3e5ac23d6fee",
+        "5427409afb20",
+        "8635cd035e37"
+      ],
+      "npcNames": [
+        "萊斯",
+        "里包恩",
+        "西奧多(伊恩)"
+      ],
+      "tagIds": [],
+      "publicInfo": "萊斯與海爾因惻隱之心而決定合作拯救西奧多與路西恩。路西恩託付給里包恩，而西奧多託付給聖紫羅蘭之家。\n\n事件後，兩人(萊斯&海爾)皆下落不明。",
+      "deepInfo": "",
+      "notes": "意外引發實驗室爆炸，大量人物喪生，導致韓特目睹芙瑞妲被燒死後，恢復為完美人類模樣，因而成為芙瑞妲狂熱者。\n\n其他地點：GeneX實驗室、聖紫羅蘭之家、斯薩魯",
+      "location": "托比亞共和國",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767336581740,
+      "verticalIndex": 1
+    },
+    {
+      "id": "EV8",
+      "title": "韓特成為S級覺醒者",
+      "startYear": -22,
+      "endYear": -22,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV20",
+        "EV17",
+        "EV7"
+      ],
+      "relatedEventIds": [
+        "EV7"
+      ],
+      "characterIds": [
+        "8635cd035e37",
+        "c40b917152c4"
+      ],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "韓特由低級覺醒者一路使用覺醒劑，跨過門檻而成為高級覺醒者。\n在實驗室其後開始執行滅口任務。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "EV10",
+      "title": "安的家人慘遭毒手，安進入孤兒院與西奧多相遇",
+      "startYear": -14,
+      "endYear": -14,
+      "isContinuous": false,
+      "size": "large",
+      "parentEventIds": [],
+      "relatedEventIds": [],
+      "characterIds": [
+        "83c21f40f1aa"
+      ],
+      "npcNames": [
+        "西奧多(伊恩)",
+        "議員 強尼"
+      ],
+      "tagIds": [],
+      "publicInfo": "強尼議員買兇將安的父母殺害，安因而被安置到聖紫羅蘭之家，與西奧多相遇，結識。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767336195600,
+      "verticalIndex": 0
+    },
+    {
+      "id": "EV4",
+      "title": "血月之夜",
+      "startYear": -9,
+      "endYear": -9,
+      "isContinuous": false,
+      "size": "large",
+      "parentEventIds": [],
+      "relatedEventIds": [],
+      "characterIds": [
+        "8635cd035e37",
+        "5427409afb20",
+        "83c21f40f1aa"
+      ],
+      "npcNames": [
+        "西奧多(伊恩)",
+        "瑪蓮"
+      ],
+      "tagIds": [],
+      "publicInfo": "在聖紫羅蘭之家所舉辦的成年祭中發生的事件。\n不明男子大規模屠殺百人，包含年輕少年少女、工作人員與警察，並留下駭人現場之後離去。\n死者肢體支離破碎，犯案手法不明，現場的血跡彷彿將圓月也染紅，故稱「血月之夜」。\n\n並且，直到今日仍未找到兇手的痕跡。\n事情發生日被托比亞共和國定為每年的「國殤之日」，並警惕兇手仍逍遙法外。",
+      "deepInfo": "",
+      "notes": "西奧多為唯一的生還者。\n\n此事件為韓特、芙瑞妲為擄走西奧多而引發。\n\n在關鍵之時，路西恩出現阻止並救走西奧多，韓特服用催化劑進入殺戮模式對抗，導致後續的血月之夜事件，以及任務的失敗。\n\n其他地點：聖紫羅蘭之家",
+      "location": "托比亞共和國",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767336627309,
+      "verticalIndex": 1
+    },
+    {
+      "id": "EV3",
+      "title": "大瘟疫",
+      "startYear": -6,
+      "endYear": -6,
+      "isContinuous": false,
+      "size": "large",
+      "parentEventIds": [
+        "EV17"
+      ],
+      "relatedEventIds": [
+        "EV1",
+        "EV12"
+      ],
+      "characterIds": [
+        "c40b917152c4"
+      ],
+      "npcNames": [
+        "久世 紗羅(Sara)"
+      ],
+      "tagIds": [
+        "tag-1",
+        "tag-7"
+      ],
+      "publicInfo": "高度致命的變異性Y病毒，具有極強的傳染性與適應能力，最早於192年爆發，迅速引發全球大流行。該病毒透過飛沫、體液與氣溶膠傳播，並能在特定環境下存活數天，使其極難根除。\n一年內造成接近億人死亡，造成大量階級、現有秩序的崩潰。\n\n\n隔年，科學家芙瑞妲研發出疫苗，成功遏止了人類的滅亡。\n\n在遊戲時間點開始時，仍苦於Y病毒後遺症影響。",
+      "deepInfo": "Y病毒為芙瑞妲自行栽培，從GeneX實驗室刻意流出。（此事實為機密）\n\n\n為芙瑞妲因黑化後，因她已經逐漸喪失情感，對人類死亡、世界混亂毫無感覺，發動的一次奪權行動，\n\n因久世 紗羅(Sara)是徹頭徹尾的利己主義者而合作，承諾讓久世 紗羅(Sara)成為完美人類的第一候選人。\n\n在大瘟疫事件後，芙瑞妲當選總統，浮出水面並成為威望人物。\n\n此事件讓米契爾斯家族取得極大勢頭與權力，讓其他家族不合（為了爭奪少量的疫苗），家族雖不是沒產生對米契爾斯家族的懷疑，但並無證據。",
+      "notes": "斯薩魯因鎖國，當傳播到斯薩魯時，疫苗已經研發完成。\n該國人口幾乎未被感染。",
+      "location": "托比亞共和國",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767336633692,
+      "verticalIndex": 2
+    },
+    {
+      "id": "EV23",
+      "title": "艾黛爾慘劇",
+      "startYear": -6,
+      "endYear": -4,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV2"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [
+        "f608774fa988",
+        "5427409afb20"
+      ],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "艾黛爾父母遭到殺害，被綁架到加姆解放組織進行實驗。\n後艾黛爾因遭到實驗，能力變強，因而在路西恩一次摧毀據點行動時，找到機會逃出，受路西恩所救。\n\n，被作為後面地獄光明HL成功推翻加姆解放組織的關鍵攻略點。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "EV12",
+      "title": "芙瑞妲出任總統",
+      "startYear": -4,
+      "endYear": -4,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV3"
+      ],
+      "relatedEventIds": [
+        "EV19"
+      ],
+      "characterIds": [
+        "c40b917152c4"
+      ],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "EV13",
+      "title": "HL首領更迭",
+      "startYear": -4,
+      "endYear": -4,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [],
+      "relatedEventIds": [
+        "EV14"
+      ],
+      "characterIds": [
+        "1a4889cddbd5",
+        "5427409afb20"
+      ],
+      "npcNames": [
+        "里包恩"
+      ],
+      "tagIds": [
+        "tag-8",
+        "tag-9"
+      ],
+      "publicInfo": "HL內部職位交替。\n包含芙瑞妲就任總統，造成對路西恩的刺激，因而路西恩挑戰里包恩，在取得合法傳承時，里包恩因故身亡，因而倉促上任。",
+      "deepInfo": "因安東不滿里包恩將首領職位傳承給路西恩，憤而找里包恩理論，卻意外促成里包恩的死亡。",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "EV19",
+      "title": "純淨源醫藥集團異動",
+      "startYear": -4,
+      "endYear": -4,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV12"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [
+        "c40b917152c4"
+      ],
+      "npcNames": [
+        "久世 紗羅(Sara)"
+      ],
+      "tagIds": [],
+      "publicInfo": "因芙瑞妲初任總統而更換負責人，原負責人為芙瑞妲。\n同年建設純淨源醫院。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "EV14",
+      "title": "HL經濟娛樂公司成立",
+      "startYear": -3,
+      "endYear": -3,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV13"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [
+        "1a4889cddbd5",
+        "5427409afb20",
+        "f608774fa988"
+      ],
+      "npcNames": [],
+      "tagIds": [
+        "tag-8",
+        "tag-9"
+      ],
+      "publicInfo": "安東接受路西恩指派，前往托比亞共和國想辦法開拓資金、情報來源。\n\n為讓艾黛爾遠離創傷之地，路西恩讓艾黛爾也跟安東一同前往托比亞共和國作為先遣部隊、情報組織而行動。\n\n艾黛爾變為不定時往返的身分。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "EV21",
+      "title": "拉兀遭到擊殺",
+      "startYear": -1,
+      "endYear": -1,
+      "isContinuous": false,
+      "size": "small",
+      "parentEventIds": [
+        "EV2"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [
+        "西奧多(伊恩)",
+        "拉兀"
+      ],
+      "tagIds": [],
+      "publicInfo": "加姆解放組織第一大將 拉兀遭到西奧多暗殺，失敗。\n西奧多",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767336646228,
+      "verticalIndex": 7
+    },
+    {
+      "id": "EV5",
+      "title": "加姆組織被推翻",
+      "startYear": 0,
+      "endYear": 0,
+      "isContinuous": false,
+      "size": "large",
+      "parentEventIds": [
+        "EV2"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [
+        "5427409afb20",
+        "b38923b3d3ed"
+      ],
+      "npcNames": [
+        "馬爾墨",
+        "拉兀"
+      ],
+      "tagIds": [
+        "tag-5",
+        "tag-8"
+      ],
+      "publicInfo": "",
+      "deepInfo": "",
+      "notes": "",
+      "location": "斯薩魯",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767336686717,
+      "verticalIndex": 1
+    },
+    {
+      "id": "EV6",
+      "title": "遊戲開始時間點",
+      "startYear": 0,
+      "endYear": 0,
+      "isContinuous": false,
+      "size": "large",
+      "parentEventIds": [],
+      "relatedEventIds": [],
+      "characterIds": [
+        "6b77aca76c61",
+        "3505f8f7462d",
+        "f608774fa988",
+        "5427409afb20",
+        "73b7da68fe65",
+        "c40b917152c4",
+        "8635cd035e37",
+        "83c21f40f1aa",
+        "dbea6aecc7b3",
+        "3e5ac23d6fee",
+        "b5e93ab34754",
+        "1a4889cddbd5"
+      ],
+      "npcNames": [
+        "議員 強尼",
+        "西奧多(伊恩)",
+        "班恩",
+        "瑪蓮",
+        "久世 紗羅(Sara)",
+        "萊斯",
+        "葛蕾絲",
+        "DJ貝斯/Bass",
+        "馬爾墨",
+        "拉兀",
+        "里包恩",
+        "珍"
+      ],
+      "tagIds": [
+        "tag-10",
+        "tag-11"
+      ],
+      "publicInfo": "",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767336659597,
+      "verticalIndex": 8
+    },
+    {
+      "id": "EV18",
+      "title": "第一章節：地獄歸來的銀狼",
+      "startYear": 0,
+      "endYear": 0,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV6"
+      ],
+      "relatedEventIds": [
+        "EV22"
+      ],
+      "characterIds": [
+        "6b77aca76c61",
+        "3505f8f7462d",
+        "f608774fa988"
+      ],
+      "npcNames": [
+        "議員 強尼",
+        "西奧多(伊恩)"
+      ],
+      "tagIds": [
+        "tag-11"
+      ],
+      "publicInfo": "發生在卡迪久家族經營的夜店的插曲。",
+      "deepInfo": "",
+      "notes": "玩家看完之後的已知訊息：\n\n1.神秘的藥物、毒品\n2.卡迪久家族資訊、四大幫派\n3.淺淺的世界觀認知（大都會、無序混亂）\n4.主角有一點故事（跟滿強的）\n5.認識的角色：強尼、西奧多、艾黛爾、貝兒、露比、貝爾納多、蘿拉\n\n其他地點：艾黛爾家",
+      "location": "夜店 Vortex",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV22",
+      "title": "第二章節",
+      "startYear": 0,
+      "endYear": 0,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV6",
+        "EV18"
+      ],
+      "relatedEventIds": [
+        "EV24"
+      ],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "先跑月華組故事",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV24",
+      "title": "第三章節~第四章節",
+      "startYear": 0,
+      "endYear": 0,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV6",
+        "EV22"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "呈續卡迪久家族內部之爭，HL娛樂公司的安東逐漸浮出水面……",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV25",
+      "title": "第五章",
+      "startYear": 1,
+      "endYear": 1,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV6"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "圍繞羅士昂兄弟會\n路西恩登場",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV26",
+      "title": "第五章節",
+      "startYear": 1,
+      "endYear": 1,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV6"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV27",
+      "title": "第六章節",
+      "startYear": 2,
+      "endYear": 2,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV6"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "純淨源醫院??",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV28",
+      "title": "第七章節：墜落",
+      "startYear": 3,
+      "endYear": 3,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV6"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "(暫擬方向\n\n主角遭到芙瑞妲出賣，眾叛親離，成為國際通緝犯。\n並受到月華組收留，從中習得任俠道義，並在精神層面上進一步昇華。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV34",
+      "title": "事件：醫療革命",
+      "startYear": 3,
+      "endYear": 3,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV28"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "顛覆生命科學的極限，人類進化的下一步！\n\nGeneX 實驗室多年來致力於細胞再生與基因科技的研究，如今我們自豪地宣布——人類將迎來一場前所未有的醫療革命！\n\n免除癌症等不治之症的威脅！\n自體栽培器官移植，全方位重塑生命！\n減少老化速度，邁向長生不老！\n\nGeneX 全球首波人體試驗已經啟動，我們誠邀志願者加入這場劃時代的生命革新計畫。\n\n你的基因將不再限制你的未來！迎接新生吧！",
+      "deepInfo": "實際上為芙瑞妲進行的喪屍化覺醒戰士實驗，為家族打造更多特種兵。",
+      "notes": "由芙瑞妲進行宣布與公開，並允許托比亞共和國申請。\n人民為了成為「選民」而擠破頭，他國政要亦是如此。",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV29",
+      "title": "第八章節",
+      "startYear": 4,
+      "endYear": 4,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV6"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [
+        "議員 強尼"
+      ],
+      "tagIds": [],
+      "publicInfo": "主角追查過去，終於弄清楚血月之夜與過去父母輩之間的愛恨情仇。\n強尼議員死亡。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV30",
+      "title": "第九章節",
+      "startYear": 4,
+      "endYear": 4,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV6"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [
+        "5427409afb20",
+        "b5e93ab34754"
+      ],
+      "npcNames": [
+        "西奧多(伊恩)"
+      ],
+      "tagIds": [],
+      "publicInfo": "阻止家族，剛鐸死亡",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV31",
+      "title": "（活動）HL入侵純淨源集團",
+      "startYear": 4,
+      "endYear": 4,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV29"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "取得實驗室真正的方位，擊殺久世紗羅",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV33",
+      "title": "第十章節：地獄歸來的銀狼",
+      "startYear": 4,
+      "endYear": 4,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV6"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV35",
+      "title": "家族發動世界政權顛覆",
+      "startYear": 4,
+      "endYear": 4,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV29"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "家族結束內鬥，對世界展開攻擊，並嘗試控制人類。\n\n利用得來的喪屍病毒",
+      "deepInfo": "青龍幫與羅士昂兄弟會遭到控制。（或許？）",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV36",
+      "title": "（活動）露比：閃耀的星星",
+      "startYear": -49,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV18"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "露比參加天堂之門選拔，卻因為親友代為報名誤填年紀，而被媒體爆料成為說謊的歌手。\n嗜血媒體刻意用許多合成照片攻擊露比，百口莫辯甚至被觀眾連署要求退賽。\n\n堂堂正正的比賽（穿插她幫助對手的劇情）而敗北，夢想破碎的露比被艾黛爾邀請，接受了HL給予第二次的機會……\n（合理化她被派去夜店駐唱的原因）",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    },
+    {
+      "id": "EV37",
+      "title": "（支線）卡迪久公主",
+      "startYear": -49,
+      "isContinuous": false,
+      "size": "medium",
+      "parentEventIds": [
+        "EV18"
+      ],
+      "relatedEventIds": [],
+      "characterIds": [],
+      "npcNames": [],
+      "tagIds": [],
+      "publicInfo": "描述蘿拉帶著貝兒、艾黛爾、露比，四個女人開心逛街的橋段。\n並描述西蒙對蘿拉很寵愛的事情，所以他們可以包場百貨公司。\n補充卡迪久家族的情報，HL的相關訊息、主線一些補充情報（如露比沒事之後的轉變）。",
+      "deepInfo": "",
+      "notes": "",
+      "location": "",
+      "createdAt": 1767326115399,
+      "updatedAt": 1767326115399
+    }
+  ],
+  "locations": [
+    "托比亞共和國",
+    "純淨源綜合醫院",
+    "賭場",
+    "教堂",
+    "聖紫羅蘭之家",
+    "聖紫羅蘭紀念公園",
+    "月華組",
+    "舊城區",
+    "月詠館",
+    "霜花樓",
+    "月見湯",
+    "卡迪久家族",
+    "酒吧",
+    "夜店 Vortex",
+    "地下擂台",
+    "斯薩魯",
+    "GeneX實驗室",
+    "艾黛爾家"
+  ],
+  "locationNodes": [
+    {
+      "id": "LOC1",
+      "label": "托比亞共和國",
+      "description": "全球人口最多、科技最先進的國家。\n每年創造無數科技突破，影響全球市場走向。然而，在這座金光閃閃的巨塔下，卻是支離破碎的社會廢墟。\n但名存實亡的政府下，治安崩潰、階級對立嚴重，底層人民在污染與犯罪中掙扎求生，托比亞的「自由」只是強者享有的特權。\n\n因為這裡有最先進的技術、最龐大的市場。\n來自世界各地的移民、走私客、傭兵、黑幫份子蜂擁而至，為的只是能在這座腐敗又繁榮的鋼鐵叢林裡，賭上性命，翻身一夜致富。\n\n這裡是托比亞——最美好，也最混亂的地方。",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC3",
+      "label": "純淨源綜合醫院",
+      "description": "院內在醫藥集團授意下，會對特定病人進行藥物實驗。",
+      "parentId": "LOC1",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC5",
+      "label": "賭場",
+      "description": "理查德家族",
+      "parentId": "LOC1",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC4",
+      "label": "教堂",
+      "description": "巴隆家族",
+      "parentId": "LOC1",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC6",
+      "label": "聖紫羅蘭之家",
+      "description": "收容孤兒的場所，因院長修女瑪蓮德高望重，在社會中有極高的地位，因而吸引寡頭注意。\n\n具有獨立保護性，平常外人難以進入，就算想認養也需要經過考核。\n\n被巴隆家族除掉，原址現已更為紀念公園。",
+      "parentId": "LOC1",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC18",
+      "label": "聖紫羅蘭紀念公園",
+      "description": "為紀念「血月之夜」慘案而設立的國家級哀悼場所，前身為聖紫羅蘭之家所在之地。該地曾發生托比亞共和國史上最駭人的無差別屠殺事件——一名身份不明的兇手在成年祭當晚血洗整座教堂，造成逾百人死亡，手法殘忍，至今未破。\n教堂廢墟原封保存於園區一隅，每年國殤之日，將有大量民眾前往此地獻花、點燭，悼念失去的生命與未完的正義。",
+      "parentId": "LOC6",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC14",
+      "label": "月華組",
+      "description": "",
+      "parentId": "LOC1",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC12",
+      "label": "舊城區",
+      "description": "",
+      "parentId": "LOC14",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC13",
+      "label": "月詠館",
+      "description": "月華組管理的女僕店。",
+      "parentId": "LOC14",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC16",
+      "label": "霜花樓",
+      "description": "",
+      "parentId": "LOC14",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC17",
+      "label": "月見湯",
+      "description": "由月華組經營的超級錢湯。\n除基本的泡澡、吃飯、私人湯屋、按摩外，亦提供情色按摩服務。",
+      "parentId": "LOC14",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC15",
+      "label": "卡迪久家族",
+      "description": "",
+      "parentId": "LOC1",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC7",
+      "label": "酒吧",
+      "description": "",
+      "parentId": "LOC15",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC8",
+      "label": "夜店 Vortex",
+      "description": "",
+      "parentId": "LOC15",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC9",
+      "label": "地下擂台",
+      "description": "",
+      "parentId": "LOC15",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC2",
+      "label": "斯薩魯",
+      "description": "斯薩魯是一個位於偏北地區的孤立島國，擁有極端氣候，每年有多數時間被嚴寒籠罩，因此又被稱為「凜冬之國」。\n\n人口稀少，生活條件艱困，但地勢險峻，天然形成天然屏障，易守難攻。\n\n加姆解放組織掌控此地後，封鎖唯一的機場與港口，限制對外聯繫。\n境內通訊受監控，人民難以接觸外界，政府幾乎名存實亡。\n\n然而，也因為其封閉性，該國人並沒有體驗到大瘟疫的入侵，形成了有些割裂的世界。\n\n在故事的開始時間點，加姆解放組織被地獄光明組織推翻，並開始了漫長的重建。",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC10",
+      "label": "GeneX實驗室",
+      "description": "",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767326115398
+    },
+    {
+      "id": "LOC11",
+      "label": "艾黛爾家",
+      "description": "有客房，但被艾黛爾塞滿了女性小垃圾。",
+      "createdAt": 1767326115398,
+      "updatedAt": 1767336848584
+    }
+  ],
+  "tags": [
+    {
+      "id": "tag-1",
+      "label": "GeneX實驗室",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "tag-2",
+      "label": "Y病毒",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "tag-3",
+      "label": "米契爾斯家族",
+      "color": "#10b981"
+    },
+    {
+      "id": "tag-4",
+      "label": "原初基因",
+      "color": "#06b6d4"
+    },
+    {
+      "id": "tag-5",
+      "label": "加姆解放組織",
+      "color": "#f59e0b"
+    },
+    {
+      "id": "tag-6",
+      "label": "加姆解放組織H事件",
+      "color": "#ec4899"
+    },
+    {
+      "id": "tag-7",
+      "label": "純淨源醫藥集團",
+      "color": "#ef4444"
+    },
+    {
+      "id": "tag-8",
+      "label": "地獄光明",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "tag-9",
+      "label": "HL娛樂經紀公司",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "tag-10",
+      "label": "遊戲開始時間點",
+      "color": "#10b981"
+    },
+    {
+      "id": "tag-11",
+      "label": "世界觀",
+      "color": "#06b6d4"
+    }
+  ]
+}

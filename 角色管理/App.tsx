@@ -2,11 +2,12 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 // Import types
-import type { AppData, Character, Relationship, TagCategory, CharacterImage, AiProvider, View, TagWithColor, ParsedData, Tag, TimelineData } from './types';
+import type { AppData, Character, Relationship, TagCategory, CharacterImage, AiProvider, View, TagWithColor, ParsedData, Tag, TimelineData, AppUser, ProfileField, ModLogChange, GlossaryTerm } from './types';
 
 // Import services
 import { parseWithGemini } from './services/geminiService';
 import { parseWithOpenAI } from './services/openaiService';
+import { loadAppData, saveAppData, loadTimelineData, saveTimelineData, getUserByCode } from './services/supabaseService';
 
 // Import components
 import Sidebar from './components/Sidebar';
@@ -15,6 +16,7 @@ import CharacterListView from './components/CharacterListView';
 import TagManagerView from './components/TagManagerView';
 import CharacterEditorModal from './components/CharacterEditorModal';
 import ApiKeyModal from './components/ApiKeyModal';
+import UserLoginModal from './components/UserLoginModal';
 import SettingsView from './components/SettingsView';
 import SearchView from './components/SearchView';
 import ImageListView from './components/ImageListView';
@@ -22,6 +24,7 @@ import ImageDetailModal from './components/ImageDetailModal';
 import TagAnalyticsView from './components/TagAnalyticsView';
 import ErrorBoundary from './components/ErrorBoundary';
 import TimelineView from './components/TimelineView';
+import GlossaryView from './components/GlossaryView';
 
 // A helper for generating default data
 function generateDefaultData(): AppData {
@@ -123,6 +126,7 @@ const App: React.FC = () => {
     const [relationships, setRelationships] = useState<Relationship[]>([]);
     const [tagCategories, setTagCategories] = useState<TagCategory[]>([]);
     const [characterImages, setCharacterImages] = useState<CharacterImage[]>([]);
+    const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>([]);
     const [timelineData, setTimelineData] = useState<TimelineData>({
         gameStartYear: 200,
         events: [],
@@ -150,6 +154,31 @@ const App: React.FC = () => {
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'readonly' | 'error'>('idle');
     const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
     const [saveError, setSaveError] = useState<string | null>(null);
+
+    // User login (使用者代碼)
+    const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+    const [isLoginChecked, setIsLoginChecked] = useState(false);
+    const modifiedCharacterIdsRef = React.useRef<Set<string>>(new Set());
+    // Prevents save effects from firing before the initial data load completes
+    const isDataReadyRef = React.useRef(false);
+    // Snapshot of the character+relationships taken when the editor opens, used for diff on close
+    const editorOpenSnapshotRef = React.useRef<{
+        character: Character;
+        relationships: Relationship[];
+    } | null>(null);
+
+    // Helper: get profileFields from a character (migrates old profile format)
+    const getProfileFieldsFromChar = (char: Character): ProfileField[] => {
+        if (char.profileFields && char.profileFields.length > 0) return char.profileFields;
+        const old = char.profile || {};
+        return [
+            { id: 'appearance', label: '外觀設定', content: old.appearance || '' },
+            { id: 'personality', label: '性格特徵', content: old.personality || '' },
+            { id: 'background', label: '背景故事', content: old.background || '' },
+            { id: 'specialty', label: '專長與興趣', content: old.specialty || '' },
+            { id: 'quote', label: '語氣示例', content: old.quote || '' },
+        ];
+    };
 
     // Load data on mount
     const [deletedRelationshipIds, setDeletedRelationshipIds] = useState<Set<string>>(new Set());
@@ -210,7 +239,55 @@ const App: React.FC = () => {
                     setOpenaiApiKey(savedOpenaiKey);
                 }
 
-                // Load Project Data (cr_data.json)
+                // ── Supabase 單一來源讀取 ──────────────────────────────────
+                const supabaseAppData = await loadAppData();
+
+                if (supabaseAppData) {
+                    // Supabase 有資料：直接使用（單一來源，不需合併）
+                    console.log('✅ Loaded app data from Supabase');
+                    setCharacters(supabaseAppData.characters || []);
+                    setRelationships(supabaseAppData.relationships || []);
+                    setCharacterImages(supabaseAppData.characterImages || []);
+                    if (supabaseAppData.deletedRelationshipIds) {
+                        setDeletedRelationshipIds(new Set(supabaseAppData.deletedRelationshipIds));
+                    }
+                    if (supabaseAppData.deletedImageIds) {
+                        setDeletedImageIds(new Set(supabaseAppData.deletedImageIds));
+                    }
+                    const cats = (supabaseAppData.tagCategories || []).map(cat => ({
+                        ...cat,
+                        tags: cat.tags.map(tag => ({ ...tag, color: cat.color })),
+                        selectionMode: cat.selectionMode || (cat.name === '勢力' ? 'single' : 'multiple'),
+                    }));
+                    setTagCategories(cats);
+                    setGlossaryTerms(supabaseAppData.glossaryTerms || []);
+
+                    // Load timeline from Supabase; if empty, fall back to static file and migrate
+                    const supabaseTimeline = await loadTimelineData();
+                    if (supabaseTimeline && (supabaseTimeline.events?.length ?? 0) > 0) {
+                        console.log('✅ Loaded timeline data from Supabase');
+                        setTimelineData(supabaseTimeline);
+                    } else {
+                        console.warn('⚠️ Supabase timeline empty, loading from static file...');
+                        try {
+                            const staticResp = await fetch('./timeline_data.json');
+                            if (staticResp.ok) {
+                                const staticTimeline: TimelineData = await staticResp.json();
+                                console.log('✅ Loaded timeline_data.json (static), migrating to Supabase...');
+                                setTimelineData(staticTimeline);
+                                // Auto-migrate to Supabase so future loads work
+                                await saveTimelineData(staticTimeline);
+                                console.log('✅ Timeline data migrated to Supabase');
+                            }
+                        } catch (e) {
+                            console.warn('⚠️ Static timeline fallback failed', e);
+                        }
+                    }
+                    return; // 直接結束，不進入舊的 A+B 合併邏輯
+                }
+
+                // Supabase 無資料（首次使用）：從 cr_data.json 讀取作為初始資料
+                console.log('⚠️ Supabase empty, falling back to cr_data.json for initial load');
                 const response = await fetch('./cr_data.json');
                 const projectData: AppData = await response.json();
 
@@ -710,148 +787,92 @@ const App: React.FC = () => {
                 setRelationships(defaultData.relationships);
                 setTagCategories(defaultData.tagCategories);
                 setCharacterImages(defaultData.characterImages);
+            } finally {
+                // Mark data as ready so save effects can proceed
+                isDataReadyRef.current = true;
             }
         };
 
         loadData();
     }, []);
 
-    // Save data to local file system (via API) and localStorage
+    // Check saved user code on mount
     useEffect(() => {
+        const savedCode = localStorage.getItem('userCode');
+        if (!savedCode) {
+            setIsLoginChecked(true);
+            return;
+        }
+        getUserByCode(savedCode)
+            .then((user) => {
+                if (user) setCurrentUser(user);
+                else localStorage.removeItem('userCode');
+            })
+            .catch(() => localStorage.removeItem('userCode'))
+            .finally(() => setIsLoginChecked(true));
+    }, []);
+
+    const handleLogin = (user: AppUser) => {
+        setCurrentUser(user);
+        localStorage.setItem('userCode', user.code);
+    };
+
+    const handleLogout = () => {
+        setCurrentUser(null);
+        localStorage.removeItem('userCode');
+    };
+
+    // Save data to Supabase (single source, works in both local dev and production)
+    useEffect(() => {
+        if (!isDataReadyRef.current) return; // 資料尚未載入完成，不儲存
+        if (!currentUser) return; // 未登入不儲存
+
         const saveData = async () => {
             try {
                 setSaveStatus('saving');
                 setSaveError(null);
 
-                // 1. Save to localStorage (Legacy/Backup)
-                const appData: AppData = { characters, relationships, tagCategories, characterImages };
-                localStorage.setItem('characterMapData', JSON.stringify(appData));
-
-                // 2. Save to local file system (Primary for persistence)
-                const userDataToSave = {
-                    characters: characters.reduce((acc, char) => {
-                        if (char.image || char.avatarPosition || (char.tagIds && char.tagIds.length > 0) || char.name !== "新角色") {
-                            acc[char.id] = {
-                                name: char.name, // Save name to avoid data loss
-                                notes: char.notes,
-                                image: char.image,
-                                avatarPosition: char.avatarPosition,
-                                tagIds: char.tagIds
-                            };
-                        }
-                        return acc;
-                    }, {} as any),
-                    relationships: relationships,  // Save all relationships
-                    tagCategories: tagCategories,  // Save TAG categories
-                    characterImages: characterImages,  // Save all character images
-                    deletedRelationshipIds: Array.from(deletedRelationshipIds), // Save deleted IDs
-                    deletedImageIds: Array.from(deletedImageIds) // Save deleted Image IDs
+                const appData: AppData = {
+                    characters,
+                    relationships,
+                    tagCategories,
+                    characterImages,
+                    glossaryTerms,
+                    deletedRelationshipIds: Array.from(deletedRelationshipIds),
+                    deletedImageIds: Array.from(deletedImageIds),
                 };
 
-                // 偵測是否為本地開發環境
-                const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                
-                if (isLocalDev) {
-                    // 本地開發：使用 API 寫入檔案
-                    const prefix = getApiPrefix();
-                    const apiCandidates = [`${prefix}/api/save-metadata`, `/api/save-metadata`].filter((v, i, a) => a.indexOf(v) === i);
-                    let saved = false;
-                    let lastErr: any = null;
-
-                    for (const apiUrl of apiCandidates) {
-                        try {
-                            const res = await fetch(apiUrl, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(userDataToSave)
-                            });
-                            if (!res.ok) {
-                                lastErr = new Error(`Save API failed: ${apiUrl} (${res.status})`);
-                                continue;
-                            }
-                            const data = await res.json().catch(() => ({}));
-                            if (data && data.success === false) {
-                                lastErr = new Error(data.error || 'Save API returned success=false');
-                                continue;
-                            }
-                            saved = true;
-                            break;
-                        } catch (e) {
-                            lastErr = e;
-                        }
-                    }
-
-                    if (!saved) throw lastErr || new Error('Save failed: no API endpoint available');
-
-                    setSaveStatus('saved');
-                    setLastSavedAt(Date.now());
-                } else {
-                    // GitHub Pages：只能讀取，不能寫入
-                    console.log('⚠️ 雲端模式：資料只能讀取，無法儲存編輯');
-                    setSaveStatus('readonly');
-                }
+                await saveAppData(appData);
+                setSaveStatus('saved');
+                setLastSavedAt(Date.now());
 
             } catch (e: any) {
                 console.error("Failed to save data", e);
                 setSaveStatus('error');
                 setSaveError(e?.message || String(e));
-                if (e.name === 'QuotaExceededError' || e.code === 22) {
-                    const now = Date.now();
-                    if (now - (window as any).lastQuotaAlert > 5000 || !(window as any).lastQuotaAlert) {
-                        alert("⚠️ 瀏覽器儲存空間已滿，但不用擔心！\n\n系統已嘗試寫入本機檔案 (user_data.json)。\n只要您的後端服務有在運行，設定就會被保存。");
-                        (window as any).lastQuotaAlert = now;
-                    }
-                }
             }
         };
 
-        // Debounce save to avoid too many API calls
         const timeoutId = setTimeout(saveData, 1000);
         return () => clearTimeout(timeoutId);
 
-    }, [characters, relationships, tagCategories, characterImages, deletedRelationshipIds, deletedImageIds]);
+    }, [characters, relationships, tagCategories, characterImages, glossaryTerms, deletedRelationshipIds, deletedImageIds, currentUser]);
 
-    // Save timeline data
+    // Save timeline data to Supabase
     useEffect(() => {
-        const saveTimelineData = async () => {
+        if (!isDataReadyRef.current) return; // 資料尚未載入完成，不儲存
+
+        const saveTimeline = async () => {
             try {
-                const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                
-                if (isLocalDev) {
-                    // Save via API
-                    const prefix = getApiPrefix();
-                    const apiCandidates = [`${prefix}/api/save-timeline`, `/api/save-timeline`].filter((v, i, a) => a.indexOf(v) === i);
-                    
-                    for (const apiUrl of apiCandidates) {
-                        try {
-                            const res = await fetch(apiUrl, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(timelineData)
-                            });
-                            if (res.ok) {
-                                const data = await res.json().catch(() => ({}));
-                                if (data && data.success !== false) {
-                                    console.log('✅ Timeline data saved');
-                                    break;
-                                }
-                            }
-                        } catch (e) {
-                            console.warn('Failed to save timeline data via API:', e);
-                        }
-                    }
-                } else {
-                    // Production: save to localStorage as backup
-                    localStorage.setItem('timelineData', JSON.stringify(timelineData));
-                    console.log('⚠️ Timeline data saved to localStorage (cloud mode)');
-                }
+                await saveTimelineData(timelineData);
+                console.log('✅ Timeline data saved to Supabase');
             } catch (e) {
                 console.error("Failed to save timeline data", e);
             }
         };
 
         // Debounce save
-        const timeoutId = setTimeout(saveTimelineData, 1000);
+        const timeoutId = setTimeout(saveTimeline, 1000);
         return () => clearTimeout(timeoutId);
     }, [timelineData]);
 
@@ -949,8 +970,100 @@ const App: React.FC = () => {
     };
 
     const handleCharacterClick = (character: Character) => {
+        const charRels = relationships.filter(r => r.source === character.id || r.target === character.id);
+        editorOpenSnapshotRef.current = {
+            character: JSON.parse(JSON.stringify(character)),
+            relationships: JSON.parse(JSON.stringify(charRels)),
+        };
         setSelectedCharacter(character);
         setIsCharacterEditorOpen(true);
+    };
+
+    const handleEditorClose = (_note?: string) => {
+        if (currentUser && selectedCharacter && editorOpenSnapshotRef.current) {
+            const snapshot = editorOpenSnapshotRef.current;
+            // Read latest character from functional update to avoid stale closure
+            setCharacters(prev => {
+                const finalChar = prev.find(c => c.id === selectedCharacter.id);
+                if (!finalChar) return prev;
+
+                const changes: ModLogChange[] = [];
+                const orig = snapshot.character;
+
+                // name
+                if (orig.name !== finalChar.name)
+                    changes.push({ field: 'name', label: '角色名稱', before: orig.name, after: finalChar.name });
+
+                // notes
+                if ((orig.notes || '') !== (finalChar.notes || ''))
+                    changes.push({ field: 'notes', label: '備註', before: orig.notes || '', after: finalChar.notes || '' });
+
+                // profileFields
+                const oldFields = getProfileFieldsFromChar(orig);
+                const newFields = getProfileFieldsFromChar(finalChar);
+                const oldFieldMap = new Map(oldFields.map(f => [f.id, f]));
+                const newFieldMap = new Map(newFields.map(f => [f.id, f]));
+                for (const [id, nf] of newFieldMap) {
+                    const of_ = oldFieldMap.get(id);
+                    if (!of_) {
+                        if (nf.content) changes.push({ field: `profile:${id}`, label: `${nf.label}（新增）`, before: '', after: nf.content });
+                    } else if (of_.content !== nf.content || of_.label !== nf.label) {
+                        changes.push({ field: `profile:${id}`, label: nf.label, before: of_.content, after: nf.content });
+                    }
+                }
+                for (const [id, of_] of oldFieldMap) {
+                    if (!newFieldMap.has(id) && of_.content)
+                        changes.push({ field: `profile:${id}`, label: `${of_.label}（刪除）`, before: of_.content, after: '' });
+                }
+
+                // tagIds
+                const oldTagIds = new Set(orig.tagIds || []);
+                const newTagIds = new Set(finalChar.tagIds || []);
+                const getTagLabel = (tagId: string) => {
+                    for (const cat of tagCategories) {
+                        const tag = cat.tags.find(t => t.id === tagId);
+                        if (tag) return `[${cat.name}] ${tag.label}`;
+                    }
+                    return tagId;
+                };
+                const addedTags = [...newTagIds].filter(id => !oldTagIds.has(id));
+                const removedTags = [...oldTagIds].filter(id => !newTagIds.has(id));
+                if (addedTags.length > 0 || removedTags.length > 0)
+                    changes.push({ field: 'tags', label: 'TAG', before: removedTags.map(getTagLabel).join('、'), after: addedTags.map(getTagLabel).join('、') });
+
+                // relationships (use current relationships state via snapshot comparison)
+                const finalRels = relationships.filter(r => r.source === selectedCharacter.id || r.target === selectedCharacter.id);
+                const origRelMap = new Map(snapshot.relationships.map(r => [r.id, r]));
+                const finalRelMap = new Map(finalRels.map(r => [r.id, r]));
+                const formatRel = (r: Relationship) => {
+                    const otherId = r.source === selectedCharacter.id ? r.target : r.source;
+                    const otherName = prev.find(c => c.id === otherId)?.name || '?';
+                    return `${otherName}：${r.label}`;
+                };
+                const addedRels = finalRels.filter(r => !origRelMap.has(r.id));
+                const removedRels = snapshot.relationships.filter(r => !finalRelMap.has(r.id));
+                const changedRels = finalRels.filter(r => {
+                    const o = origRelMap.get(r.id);
+                    return o && (o.label !== r.label || (o.description || '') !== (r.description || ''));
+                });
+                if (addedRels.length > 0 || removedRels.length > 0 || changedRels.length > 0) {
+                    const before = [...removedRels.map(r => formatRel(r)), ...changedRels.map(r => formatRel(origRelMap.get(r.id)!))].filter(Boolean).join('\n');
+                    const after = [...addedRels.map(formatRel), ...changedRels.map(formatRel)].filter(Boolean).join('\n');
+                    changes.push({ field: 'relationships', label: '關係', before, after });
+                }
+
+                if (changes.length > 0) {
+                    const logEntry = { at: Date.now(), by: currentUser.name, changes };
+                    return prev.map(c => c.id === selectedCharacter.id
+                        ? { ...c, modLog: [...(c.modLog || []), logEntry] }
+                        : c
+                    );
+                }
+                return prev;
+            });
+        }
+        editorOpenSnapshotRef.current = null;
+        setIsCharacterEditorOpen(false);
     };
 
     const handleSaveCharacter = (updatedCharacter: Character) => {
@@ -1054,45 +1167,41 @@ const App: React.FC = () => {
         linkElement.click();
     };
 
-    const handleExportCharacters = () => {
+    const handleExportAll = () => {
+        const now = new Date().toISOString().slice(0, 10);
         downloadJson({
             characters,
             relationships,
             characterImages,
-            deletedRelationshipIds: Array.from(deletedRelationshipIds)
-        }, 'characters-and-relations.json');
+            tagCategories,
+            glossaryTerms,
+            timelineData,
+            deletedRelationshipIds: Array.from(deletedRelationshipIds),
+        }, `cr-backup-${now}.json`);
     };
 
-    const handleExportTags = () => {
-        downloadJson({ tagCategories }, 'tags.json');
-    };
-
-    const handleImportCharacters = (data: Partial<AppData> & { deletedRelationshipIds?: string[] }) => {
-        if (data.characters && data.relationships && data.characterImages) {
-            setCharacters(data.characters);
-            setRelationships(data.relationships);
-            setCharacterImages(data.characterImages);
-
-            if (data.deletedRelationshipIds) {
-                setDeletedRelationshipIds(new Set(data.deletedRelationshipIds));
-            }
-
-            alert('角色與關係檔已成功匯入！');
-        } else {
-            alert('匯入失敗：檔案格式不正確或缺少必要資料。');
-        }
-    };
-
-    const handleImportTags = (data: Partial<AppData>) => {
+    const handleImportAll = (data: Partial<AppData> & { deletedRelationshipIds?: string[]; timelineData?: TimelineData }) => {
+        let imported = 0;
+        if (data.characters) { setCharacters(data.characters); imported++; }
+        if (data.relationships) { setRelationships(data.relationships); imported++; }
+        if (data.characterImages) { setCharacterImages(data.characterImages); imported++; }
         if (data.tagCategories) {
-            const sanitizedCategories = data.tagCategories.map((cat: TagCategory) => ({
+            setTagCategories(data.tagCategories.map((cat: TagCategory) => ({
                 ...cat,
-                selectionMode: cat.selectionMode || 'multiple'
-            }));
-            setTagCategories(sanitizedCategories);
-            alert('Tag 設定檔已成功匯入！');
+                selectionMode: cat.selectionMode || 'multiple',
+            })));
+            imported++;
+        }
+        if (data.glossaryTerms) { setGlossaryTerms(data.glossaryTerms); imported++; }
+        if (data.timelineData) { setTimelineData(data.timelineData); imported++; }
+        if (data.deletedRelationshipIds) {
+            setDeletedRelationshipIds(new Set(data.deletedRelationshipIds));
+        }
+
+        if (imported > 0) {
+            alert(`✅ 匯入成功！共還原 ${imported} 個資料區塊。`);
         } else {
-            alert('匯入失敗：檔案格式不正確或缺少必要資料。');
+            alert('匯入失敗：檔案格式不正確或不含可識別的資料。');
         }
     };
 
@@ -1101,6 +1210,19 @@ const App: React.FC = () => {
         setRelationships([]);
         setTagCategories([]);
         setCharacterImages([]);
+        setGlossaryTerms([]);
+    };
+
+    const handleSaveGlossaryTerm = (term: GlossaryTerm) => {
+        setGlossaryTerms(prev => {
+            const idx = prev.findIndex(t => t.id === term.id);
+            const next = idx >= 0 ? prev.map((t, i) => i === idx ? term : t) : [...prev, term];
+            return next;
+        });
+    };
+
+    const handleDeleteGlossaryTerm = (termId: string) => {
+        setGlossaryTerms(prev => prev.filter(t => t.id !== termId));
     };
 
 
@@ -1126,14 +1248,24 @@ const App: React.FC = () => {
                     allTags={allTags}
                     onCharacterClick={handleCharacterClick}
                 />;
+            case 'glossary':
+                return <GlossaryView
+                    glossaryTerms={glossaryTerms}
+                    onSaveTerm={handleSaveGlossaryTerm}
+                    onDeleteTerm={handleDeleteGlossaryTerm}
+                    characters={characters}
+                    timelineEvents={timelineData.events || []}
+                    onCharacterClick={handleCharacterClick}
+                    currentUser={currentUser}
+                />;
             case 'settings':
                 return <SettingsView
                     onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
-                    onExportCharacters={handleExportCharacters}
-                    onImportCharacters={handleImportCharacters}
-                    onExportTags={handleExportTags}
-                    onImportTags={handleImportTags}
+                    onExportAll={handleExportAll}
+                    onImportAll={handleImportAll}
                     onReset={handleClearAllData}
+                    currentUser={currentUser}
+                    onLogout={handleLogout}
                 />;
             default:
                 return <div>View not found</div>;
@@ -1172,23 +1304,30 @@ const App: React.FC = () => {
                 </ErrorBoundary>
             </main>
 
-            {/* Save Status HUD */}
-            <div className="fixed bottom-3 right-3 z-50 rounded-md border border-gray-700 bg-gray-950/80 px-3 py-2 text-xs text-gray-200 backdrop-blur">
-                {saveStatus === 'saving' && <div>儲存中…</div>}
-                {saveStatus === 'saved' && (
-                    <div>
-                        已儲存{lastSavedAt ? `（${new Date(lastSavedAt).toLocaleTimeString()}）` : ''}
-                    </div>
-                )}
-                {saveStatus === 'readonly' && <div>雲端模式：唯讀（不會寫入）</div>}
-                {saveStatus === 'error' && <div className="text-red-300">儲存失敗：{saveError || '未知錯誤'}</div>}
-                {saveStatus === 'idle' && <div className="text-gray-400">未變更</div>}
+            {/* Save Status HUD - 兩個格子 */}
+            <div className="fixed bottom-3 right-3 z-50 flex gap-2">
+                <div className="rounded-md border border-gray-700 bg-gray-950/80 px-3 py-2 text-xs text-gray-200 backdrop-blur min-w-[4rem] text-center">
+                    {currentUser?.name || '—'}
+                </div>
+                <div className="rounded-md border border-gray-700 bg-gray-950/80 px-3 py-2 text-xs text-gray-200 backdrop-blur">
+                    {saveStatus === 'saving' && <div>儲存中…</div>}
+                    {saveStatus === 'saved' && (
+                        <div>已儲存{lastSavedAt ? `（${new Date(lastSavedAt).toLocaleTimeString()}）` : ''}</div>
+                    )}
+                    {saveStatus === 'readonly' && <div>雲端模式：唯讀</div>}
+                    {saveStatus === 'error' && <div className="text-red-300">儲存失敗：{saveError || '未知錯誤'}</div>}
+                    {saveStatus === 'idle' && <div className="text-gray-400">未變更</div>}
+                </div>
             </div>
+
+            {!currentUser && isLoginChecked && (
+                <UserLoginModal onLogin={handleLogin} />
+            )}
 
             {isCharacterEditorOpen && selectedCharacter && (
                 <CharacterEditorModal
                     isOpen={isCharacterEditorOpen}
-                    onClose={() => setIsCharacterEditorOpen(false)}
+                    onClose={handleEditorClose}
                     character={selectedCharacter}
                     onSave={handleSaveCharacter}
                     onDelete={handleDeleteCharacter}
@@ -1199,6 +1338,7 @@ const App: React.FC = () => {
                     characterImages={characterImages}
                     onUpdateCharacterImages={setCharacterImages}
                     onAddTagToCategory={handleAddTagToCategory}
+                    currentUser={currentUser}
                 />
             )}
 

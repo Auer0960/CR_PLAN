@@ -1,13 +1,111 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+
+function parseBirthday(birthday: string): { month: number; day: number } | null {
+  if (!birthday) return null;
+  let month = 0, day = 0;
+
+  // MM/DD 或 MM-DD
+  const slashMatch = birthday.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+  if (slashMatch) { month = parseInt(slashMatch[1]); day = parseInt(slashMatch[2]); }
+
+  // M月D日（含中文格式）
+  if (!month) {
+    const chMatch = birthday.match(/^(\d{1,2})月(\d{1,2})日?$/);
+    if (chMatch) { month = parseInt(chMatch[1]); day = parseInt(chMatch[2]); }
+  }
+
+  // 純數字：MMDD（4位）或 MDD（3位）
+  if (!month) {
+    const digits = birthday.replace(/\D/g, '');
+    if (digits.length === 4) { month = parseInt(digits.slice(0, 2)); day = parseInt(digits.slice(2)); }
+    else if (digits.length === 3) { month = parseInt(digits.slice(0, 1)); day = parseInt(digits.slice(1)); }
+  }
+
+  if (!month || !day || month > 12 || day > 31) return null;
+  return { month, day };
+}
+
+const ZODIAC_DATA: { name: string; symbol: string }[] = [
+  { name: '摩羯座', symbol: '♑' }, { name: '水瓶座', symbol: '♒' },
+  { name: '雙魚座', symbol: '♓' }, { name: '牡羊座', symbol: '♈' },
+  { name: '金牛座', symbol: '♉' }, { name: '雙子座', symbol: '♊' },
+  { name: '巨蟹座', symbol: '♋' }, { name: '獅子座', symbol: '♌' },
+  { name: '處女座', symbol: '♍' }, { name: '天秤座', symbol: '♎' },
+  { name: '天蠍座', symbol: '♏' }, { name: '射手座', symbol: '♐' },
+];
+
+function getZodiacName(birthday: string): string {
+  const p = parseBirthday(birthday);
+  if (!p) return '';
+  const { month, day } = p;
+  if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return '摩羯座';
+  if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return '水瓶座';
+  if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return '雙魚座';
+  if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return '牡羊座';
+  if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return '金牛座';
+  if ((month === 5 && day >= 21) || (month === 6 && day <= 21)) return '雙子座';
+  if ((month === 6 && day >= 22) || (month === 7 && day <= 22)) return '巨蟹座';
+  if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return '獅子座';
+  if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return '處女座';
+  if ((month === 9 && day >= 23) || (month === 10 && day <= 23)) return '天秤座';
+  if ((month === 10 && day >= 24) || (month === 11 && day <= 22)) return '天蠍座';
+  if ((month === 11 && day >= 23) || (month === 12 && day <= 21)) return '射手座';
+  return '';
+}
+
+function getZodiacDisplay(birthday: string): string {
+  const name = getZodiacName(birthday);
+  if (!name) return '';
+  const found = ZODIAC_DATA.find(z => z.name === name);
+  return found ? `${found.name} ${found.symbol}` : name;
+}
 import { v4 as uuidv4 } from 'uuid';
-import type { Character, Relationship, TagCategory, CharacterImage, TagWithColor, Tag } from '../types';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+
+function prepareMarkdown(text: string): string {
+  const lines = text.split('\n');
+  const result: string[] = [];
+  const isHeading = (s: string) => /^#{1,6}(\s|$)/.test(s.trim());
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const nextLine = lines[i + 1] ?? '';
+    const prevResult = result[result.length - 1] ?? '';
+    const empty = line.trim() === '';
+    const heading = isHeading(line);
+    const nextHeading = isHeading(nextLine);
+    const nextEmpty = nextLine.trim() === '';
+
+    if (heading && prevResult.trim() !== '' && result.length > 0) {
+      result.push('');
+    }
+
+    result.push(line);
+
+    if (heading && !nextEmpty) {
+      result.push('');
+      continue;
+    }
+
+    if (!empty && !heading && !nextHeading && !line.endsWith('  ')) {
+      result[result.length - 1] = line + '  ';
+    }
+  }
+
+  return result.join('\n');
+}
+import type { Character, Relationship, TagCategory, CharacterImage, TagWithColor, Tag, ProfileField, ModLogChange, AppUser } from '../types';
+import { computeLineDiff } from '../utils/diffLine';
 import { CloseIcon, TrashIcon, UsersIcon, ImageIcon, TagsIcon, PlusIcon, EditIcon, ChevronDownIcon, SettingsIcon } from './Icons';
 import TagSelectorModal from './TagSelectorModal';
 import ImageCropperModal from './ImageCropperModal';
+import { uploadCharacterImage, uploadAvatarFromBase64 } from '../services/supabaseService';
 
 interface CharacterEditorModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (note?: string) => void;
   character: Character;
   onSave: (character: Character) => void;
   onDelete: (characterId: string) => void;
@@ -18,9 +116,10 @@ interface CharacterEditorModalProps {
   characterImages: CharacterImage[];
   onUpdateCharacterImages: (updater: React.SetStateAction<CharacterImage[]>) => void;
   onAddTagToCategory: (label: string, categoryName: string) => Tag | null;
+  currentUser?: AppUser | null;
 }
 
-type EditorTab = 'details' | 'relationships' | 'images';
+type EditorTab = 'details' | 'relationships' | 'profile' | 'images' | 'changelog';
 type RelationshipDirection = 'to' | 'from' | 'both' | 'none';
 type RelationshipItem = {
   id: string;
@@ -83,9 +182,8 @@ const resizeImage = (imageDataUrl: string, maxSize: number): Promise<string> => 
       }
       ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-      // Use 'image/jpeg' for better compression of photographic/complex images.
-      // 0.9 provides a high quality setting.
-      resolve(canvas.toDataURL('image/jpeg', 0.9));
+      // WebP supports transparency (PNG alpha) and has better compression than JPEG.
+      resolve(canvas.toDataURL('image/webp', 0.92));
     };
     img.onerror = (err) => {
       reject(new Error(`Image failed to load: ${err}`));
@@ -118,13 +216,86 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
   characterImages,
   onUpdateCharacterImages,
   onAddTagToCategory,
+  currentUser,
 }) => {
   const [editedCharacter, setEditedCharacter] = useState<Character>(character);
   const [activeTab, setActiveTab] = useState<EditorTab>('details');
+  const [expandedLogIndices, setExpandedLogIndices] = useState<Set<number>>(new Set());
+  const [editingNoteIndex, setEditingNoteIndex] = useState<number | null>(null);
+  const [editingNoteText, setEditingNoteText] = useState('');
+
+  const isAdmin = currentUser?.code === '01069';
+
+  // Save a note edit for a specific log entry (display index = reversed)
+  const handleSaveNoteForEntry = (displayIndex: number) => {
+    const modLog = [...(editedCharacter.modLog || [])];
+    const realIndex = modLog.length - 1 - displayIndex;
+    modLog[realIndex] = { ...modLog[realIndex], note: editingNoteText.trim() || undefined };
+    const updated = { ...editedCharacter, modLog };
+    setEditedCharacter(updated);
+    onSave(updated);
+    setEditingNoteIndex(null);
+    setEditingNoteText('');
+  };
+
+  // Admin: delete a specific log entry
+  const handleDeleteLogEntry = (displayIndex: number) => {
+    const modLog = [...(editedCharacter.modLog || [])];
+    const realIndex = modLog.length - 1 - displayIndex;
+    modLog.splice(realIndex, 1);
+    const updated = { ...editedCharacter, modLog };
+    setEditedCharacter(updated);
+    onSave(updated);
+  };
   const [isTagSelectorOpen, setIsTagSelectorOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [editingImageTagsFor, setEditingImageTagsFor] = useState<CharacterImage | null>(null);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [profileEditMode, setProfileEditMode] = useState(false);
+
+  // Derived profile fields — migrates old fixed-key profile to dynamic array on first access
+  const profileFields = useMemo<ProfileField[]>(() => {
+    if (editedCharacter.profileFields && editedCharacter.profileFields.length > 0) {
+      return editedCharacter.profileFields;
+    }
+    const old = editedCharacter.profile || {};
+    return [
+      { id: 'appearance', label: '外觀設定', content: old.appearance || '' },
+      { id: 'personality', label: '性格特徵', content: old.personality || '' },
+      { id: 'background', label: '背景故事', content: old.background || '' },
+      { id: 'specialty', label: '專長與興趣', content: old.specialty || '' },
+      { id: 'quote', label: '語氣示例', content: old.quote || '' },
+    ];
+  }, [editedCharacter]);
+
+  const saveProfileFields = (fields: ProfileField[]) => {
+    const next = { ...editedCharacter, profileFields: fields };
+    setEditedCharacter(next);
+    onSave(next);
+  };
+
+  const updateProfileField = (idx: number, patch: Partial<ProfileField>) => {
+    const next = profileFields.map((f, i) => i === idx ? { ...f, ...patch } : f);
+    saveProfileFields(next);
+  };
+
+  const addProfileField = () => {
+    const next = [...profileFields, { id: uuidv4(), label: '新欄位', content: '' }];
+    saveProfileFields(next);
+  };
+
+  const deleteProfileField = (idx: number) => {
+    const next = profileFields.filter((_, i) => i !== idx);
+    saveProfileFields(next);
+  };
+
+  const moveProfileField = (idx: number, dir: -1 | 1) => {
+    const next = [...profileFields];
+    const target = idx + dir;
+    if (target < 0 || target >= next.length) return;
+    [next[idx], next[target]] = [next[target], next[idx]];
+    saveProfileFields(next);
+  };
 
   // Relationship form state
   const [newRelTarget, setNewRelTarget] = useState('');
@@ -174,9 +345,36 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
   const characterTags = useMemo(() => allTags.filter(tag => editedCharacter.tagIds.includes(tag.id)), [allTags, editedCharacter.tagIds]);
   const currentCharacterImages = useMemo(() => characterImages.filter(img => img.characterId === character.id), [characterImages, character.id]);
 
+  const codeError = useMemo(() => {
+    const code = (editedCharacter.characterCode || '').trim().toLowerCase();
+    if (!code) return null;
+    const duplicate = allCharacters.find(
+      c => c.id !== editedCharacter.id && (c.characterCode || '').toLowerCase() === code
+    );
+    return duplicate ? `編號已被「${duplicate.name}」使用` : null;
+  }, [editedCharacter.characterCode, editedCharacter.id, allCharacters]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    const updatedChar = { ...editedCharacter, [name]: value };
+    let updatedChar = { ...editedCharacter, [name]: value };
+
+    // 生日變更時自動套用星座 TAG
+    if (name === 'birthday') {
+      const zodiacCat = tagCategories.find(c => c.name === '星座');
+      if (zodiacCat) {
+        const zodiacTagIds = new Set(zodiacCat.tags.map(t => t.id));
+        // 移除舊星座 TAG
+        let newTagIds = updatedChar.tagIds.filter(id => !zodiacTagIds.has(id));
+        // 加入新星座 TAG
+        const zodiacName = getZodiacName(value);
+        if (zodiacName) {
+          const match = zodiacCat.tags.find(t => t.label === zodiacName);
+          if (match) newTagIds = [...newTagIds, match.id];
+        }
+        updatedChar = { ...updatedChar, tagIds: newTagIds };
+      }
+    }
+
     setEditedCharacter(updatedChar);
     onSave(updatedChar); // Auto-save on change
   };
@@ -347,76 +545,56 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
   }, [allCharacters, character.id, searchTargetName]);
 
   // --- Image Logic ---
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const originalImageDataUrl = reader.result as string;
-        if (!originalImageDataUrl) return;
-
-        try {
-          // Resize the image before storing it or showing the cropper
-          // This prevents crashes with very large images
-          const resizedImageDataUrl = await resizeImage(originalImageDataUrl, 1024); // Max size 1024px
-
-          // Upload to local API
-          const fileName = `${uuidv4()}.jpg`;
-          const response = await fetch('/api/upload-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              characterName: character.name,
-              fileName: fileName,
-              imageBase64: resizedImageDataUrl
-            })
-          });
-
-          let imagePath = resizedImageDataUrl; // Fallback to base64 if upload fails (or for immediate preview if needed)
-
-          if (response.ok) {
-            const result = await response.json();
-            if (result.success && result.path) {
-              imagePath = result.path;
-            }
-          } else {
-            console.error("Failed to upload image to local storage, falling back to base64");
-          }
-
-          const newImage: CharacterImage = {
-            id: uuidv4(),
-            characterId: character.id,
-            imageDataUrl: imagePath,
-            tagIds: [],
-            notes: '',
-          };
-          onUpdateCharacterImages(prev => [...prev, newImage]);
-
-          setEditedCharacter(currentChar => {
-            if (!currentChar.image) {
-              // Also use the resized image for the cropper to maintain consistency
-              setImageToCrop(resizedImageDataUrl);
-            }
-            return currentChar;
-          });
-        } catch (error) {
-          console.error("Failed to process image:", error);
-          alert(`處理圖片時發生錯誤: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
     // Clear input to allow re-uploading the same file
     e.target.value = '';
+
+    try {
+      // 上傳至 Supabase Storage（自動壓縮成 800px / 150KB）
+      const { imageUrl, thumbnailUrl } = await uploadCharacterImage(file, character.id);
+
+      const newImage: CharacterImage = {
+        id: uuidv4(),
+        characterId: character.id,
+        imageDataUrl: imageUrl,
+        thumbnailUrl: thumbnailUrl,
+        tagIds: [],
+        notes: '',
+      };
+      onUpdateCharacterImages(prev => [...prev, newImage]);
+
+      // 如果角色尚無頭像，開啟裁切器（使用原始 File 轉 DataURL 供裁切預覽）
+      setEditedCharacter(currentChar => {
+        if (!currentChar.image) {
+          const reader = new FileReader();
+          reader.onload = () => setImageToCrop(reader.result as string);
+          reader.readAsDataURL(file);
+        }
+        return currentChar;
+      });
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+      alert(`上傳圖片時發生錯誤: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
-
-  const handleCropComplete = (croppedImageDataUrl: string) => {
-    // This function's only job is to update the character's main avatar
-    const updatedChar = { ...editedCharacter, image: croppedImageDataUrl };
-    setEditedCharacter(updatedChar);
-    onSave(updatedChar);
-    setImageToCrop(null); // Close the cropper modal
+  const handleCropComplete = async (croppedImageDataUrl: string) => {
+    setImageToCrop(null); // 關閉裁切器
+    try {
+      // 將裁切後的 base64 上傳到 Supabase Storage
+      const avatarUrl = await uploadAvatarFromBase64(croppedImageDataUrl, character.id);
+      const updatedChar = { ...editedCharacter, image: avatarUrl };
+      setEditedCharacter(updatedChar);
+      onSave(updatedChar);
+    } catch (error) {
+      console.error("Failed to upload avatar:", error);
+      // 上傳失敗時 fallback：直接存 base64（不推薦，但保留穩定性）
+      const updatedChar = { ...editedCharacter, image: croppedImageDataUrl };
+      setEditedCharacter(updatedChar);
+      onSave(updatedChar);
+    }
   };
 
   const handleDeleteImage = (imageId: string) => {
@@ -465,7 +643,7 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-40" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-40" onClick={() => onClose()}>
         <div
           className="bg-gray-800 text-white rounded-lg shadow-xl w-full max-w-4xl h-[80vh] flex overflow-hidden"
           onClick={e => e.stopPropagation()}
@@ -508,7 +686,7 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
 
             <nav className="space-y-2">
               <button onClick={() => setActiveTab('details')} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left ${activeTab === 'details' ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}>
-                <UsersIcon className="w-5 h-5" /> 詳細資料
+                <UsersIcon className="w-5 h-5" /> 一般資料
               </button>
               <button onClick={() => setActiveTab('relationships')} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left ${activeTab === 'relationships' ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}>
                 <UsersIcon className="w-5 h-5" /> 關係
@@ -518,6 +696,13 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
               </button>
               <button onClick={() => setActiveTab('images')} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left ${activeTab === 'images' ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}>
                 <ImageIcon className="w-5 h-5" /> 圖片
+              </button>
+              <button onClick={() => setActiveTab('changelog')} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left ${activeTab === 'changelog' ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}>
+                <EditIcon className="w-5 h-5" />
+                修改紀錄
+                {editedCharacter.modLog && editedCharacter.modLog.length > 0 && (
+                  <span className="ml-auto text-xs bg-indigo-800 rounded-full px-1.5 py-0.5">{editedCharacter.modLog.length}</span>
+                )}
               </button>
             </nav>
 
@@ -535,16 +720,129 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col p-6 overflow-y-auto">
-            <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white z-10">
+            <button onClick={() => onClose()} className="absolute top-4 right-4 text-gray-400 hover:text-white z-10">
               <CloseIcon className="w-6 h-6" />
             </button>
 
             {activeTab === 'details' && (
-              <div className="space-y-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">名稱</label>
-                  <input type="text" id="name" name="name" value={editedCharacter.name} onChange={handleChange} className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500" />
+              <div className="space-y-5">
+                {/* Row 1: 名稱 + 角色編號 */}
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">名稱</label>
+                    <input type="text" id="name" name="name" value={editedCharacter.name} onChange={handleChange} className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500" />
+                  </div>
+                  <div className="w-36 flex-shrink-0">
+                    <label htmlFor="characterCode" className="block text-sm font-medium text-gray-300 mb-1">角色編號</label>
+                    <input
+                      type="text"
+                      id="characterCode"
+                      name="characterCode"
+                      value={editedCharacter.characterCode || ''}
+                      onChange={handleChange}
+                      placeholder="cr031"
+                      className={`w-full p-2 bg-gray-900 border rounded-md focus:ring-2 focus:ring-indigo-500 font-mono text-sm ${
+                        codeError ? 'border-red-500 focus:ring-red-500' : 'border-gray-600'
+                      }`}
+                    />
+                    {codeError && <p className="text-xs text-red-400 mt-1 leading-tight">{codeError}</p>}
+                  </div>
                 </div>
+
+                {/* Row 2: 生日 + 星座（自動）+ 稱號 */}
+                <div className="flex gap-3 flex-wrap">
+                  <div className="w-28 flex-shrink-0">
+                    <label htmlFor="birthday" className="block text-sm font-medium text-gray-300 mb-1">生日</label>
+                    <input
+                      type="text"
+                      id="birthday"
+                      name="birthday"
+                      value={editedCharacter.birthday || ''}
+                      onChange={handleChange}
+                      placeholder="04/15 或 0415"
+                      className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 text-sm placeholder:text-gray-700"
+                    />
+                  </div>
+                  <div className="w-32 flex-shrink-0">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">星座</label>
+                    {getZodiacDisplay(editedCharacter.birthday || '') ? (
+                      <div className="w-full p-2 text-sm text-indigo-300 font-medium min-h-[38px] flex items-center gap-1">
+                        {getZodiacDisplay(editedCharacter.birthday || '')}
+                      </div>
+                    ) : (
+                      <div className="w-full p-2 text-xs text-gray-600 min-h-[38px] flex items-center">
+                        由生日自動計算
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-[120px]">
+                    <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">稱號</label>
+                    <input
+                      type="text"
+                      id="title"
+                      name="title"
+                      value={editedCharacter.title || ''}
+                      onChange={handleChange}
+                      placeholder="黑夜女王"
+                      className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 text-sm placeholder:text-gray-700"
+                    />
+                  </div>
+                </div>
+
+                {/* Row 3: 身高 + 體重 + 胸圍 */}
+                <div className="flex gap-3 flex-wrap">
+                  <div className="w-24 flex-shrink-0">
+                    <label htmlFor="height" className="block text-sm font-medium text-gray-300 mb-1">身高</label>
+                    <input
+                      type="text"
+                      id="height"
+                      name="height"
+                      value={editedCharacter.height || ''}
+                      onChange={handleChange}
+                      placeholder="175cm"
+                      className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 text-sm placeholder:text-gray-700"
+                    />
+                  </div>
+                  <div className="w-24 flex-shrink-0">
+                    <label htmlFor="weight" className="block text-sm font-medium text-gray-300 mb-1">體重</label>
+                    <input
+                      type="text"
+                      id="weight"
+                      name="weight"
+                      value={editedCharacter.weight || ''}
+                      onChange={handleChange}
+                      placeholder="55kg"
+                      className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 text-sm placeholder:text-gray-700"
+                    />
+                  </div>
+                  <div className="w-24 flex-shrink-0">
+                    <label htmlFor="bust" className="block text-sm font-medium text-gray-300 mb-1">胸圍</label>
+                    <input
+                      type="text"
+                      id="bust"
+                      name="bust"
+                      value={editedCharacter.bust || ''}
+                      onChange={handleChange}
+                      placeholder="88cm"
+                      className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 text-sm placeholder:text-gray-700"
+                    />
+                  </div>
+                </div>
+
+                {/* Row 4: 人物介紹 */}
+                <div>
+                  <label htmlFor="introduction" className="block text-sm font-medium text-gray-300 mb-1">人物介紹</label>
+                  <input
+                    type="text"
+                    id="introduction"
+                    name="introduction"
+                    value={editedCharacter.introduction || ''}
+                    onChange={handleChange}
+                    placeholder="操縱黑暗波動，對閨蜜忠誠的賭場兔女郎"
+                    className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 text-sm placeholder:text-gray-700"
+                  />
+                </div>
+
                 <div>
                   <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-1">筆記</label>
                   <textarea id="notes" name="notes" value={editedCharacter.notes} onChange={handleChange} rows={8} className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500" />
@@ -568,74 +866,93 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
             )}
 
             {activeTab === 'profile' && (
-              <div className="space-y-8 animate-fadeIn">
-                {!character.profile ? (
-                  <div className="text-center py-12 text-gray-500">
-                    <p>此角色尚無詳細設定資料。</p>
-                    <p className="text-sm mt-2">請確認 Markdown 檔案中包含相關章節。</p>
+              <div className="animate-fadeIn">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-5">
+                  <h3 className="text-lg font-semibold text-gray-200">角色設定</h3>
+                  {profileEditMode ? (
+                    <button
+                      onClick={() => setProfileEditMode(false)}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 rounded-md text-sm font-medium text-white flex items-center gap-1.5"
+                    >
+                      ✓ 完成
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setProfileEditMode(true)}
+                      className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-md text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                    >
+                      ✏️ 編輯
+                    </button>
+                  )}
+                </div>
+
+                {profileEditMode ? (
+                  /* ── EDIT MODE ── */
+                  <div className="space-y-5">
+                    {profileFields.map((field, idx) => (
+                      <div key={field.id} className="bg-gray-900/60 rounded-lg p-4 border border-gray-700">
+                        {/* Field label row */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <input
+                            type="text"
+                            value={field.label}
+                            onChange={(e) => updateProfileField(idx, { label: e.target.value })}
+                            className="flex-1 px-2 py-1 bg-gray-700 text-white border border-gray-600 rounded text-sm font-semibold focus:border-indigo-500 outline-none"
+                          />
+                          <button
+                            onClick={() => moveProfileField(idx, -1)}
+                            disabled={idx === 0}
+                            title="上移"
+                            className="px-2 py-1 rounded text-gray-400 hover:text-white hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed text-xs"
+                          >▲</button>
+                          <button
+                            onClick={() => moveProfileField(idx, 1)}
+                            disabled={idx === profileFields.length - 1}
+                            title="下移"
+                            className="px-2 py-1 rounded text-gray-400 hover:text-white hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed text-xs"
+                          >▼</button>
+                          <button
+                            onClick={() => deleteProfileField(idx)}
+                            title="刪除欄位"
+                            className="px-2 py-1 rounded text-red-400 hover:text-red-300 hover:bg-red-900/30 text-xs"
+                          >✕</button>
+                        </div>
+                        {/* Textarea */}
+                        <textarea
+                          value={field.content}
+                          onChange={(e) => updateProfileField(idx, { content: e.target.value })}
+                          placeholder={`${field.label}內容（支援 Markdown）`}
+                          className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm font-mono resize-y min-h-[180px]"
+                        />
+                      </div>
+                    ))}
+                    <button
+                      onClick={addProfileField}
+                      className="w-full py-2 rounded-lg border-2 border-dashed border-gray-600 hover:border-indigo-500 text-gray-400 hover:text-indigo-400 text-sm transition-colors"
+                    >
+                      ＋ 新增欄位
+                    </button>
                   </div>
                 ) : (
-                  <>
-                    {character.profile.appearance && (
-                      <section>
-                        <h3 className="text-lg font-semibold text-indigo-400 mb-3 flex items-center">
-                          <span className="w-1 h-6 bg-indigo-500 rounded-full mr-3"></span>
-                          外觀設定
-                        </h3>
-                        <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50 text-gray-300 leading-relaxed whitespace-pre-wrap">
-                          {character.profile.appearance}
-                        </div>
-                      </section>
+                  /* ── VIEW MODE ── */
+                  <div className="divide-y divide-gray-700/60">
+                    {profileFields.map((field) => (
+                      <div key={field.id} className="py-5 first:pt-0">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-2">{field.label}</h4>
+                        {field.content ? (
+                          <div className="text-gray-200 text-sm leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-bold [&_em]:italic [&_h1]:text-lg [&_h1]:font-bold [&_h2]:text-base [&_h2]:font-bold [&_h3]:text-sm [&_h3]:font-semibold [&_p]:mb-2 [&_li]:mb-1">
+                            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{prepareMarkdown(field.content)}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-sm italic">（尚未填寫）</p>
+                        )}
+                      </div>
+                    ))}
+                    {profileFields.length === 0 && (
+                      <p className="text-gray-500 text-sm py-4 text-center">尚無欄位，點「✏️ 編輯」新增</p>
                     )}
-
-                    {character.profile.personality && (
-                      <section>
-                        <h3 className="text-lg font-semibold text-emerald-400 mb-3 flex items-center">
-                          <span className="w-1 h-6 bg-emerald-500 rounded-full mr-3"></span>
-                          性格特徵
-                        </h3>
-                        <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50 text-gray-300 leading-relaxed whitespace-pre-wrap">
-                          {character.profile.personality}
-                        </div>
-                      </section>
-                    )}
-
-                    {character.profile.background && (
-                      <section>
-                        <h3 className="text-lg font-semibold text-amber-400 mb-3 flex items-center">
-                          <span className="w-1 h-6 bg-amber-500 rounded-full mr-3"></span>
-                          背景故事
-                        </h3>
-                        <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50 text-gray-300 leading-relaxed whitespace-pre-wrap">
-                          {character.profile.background}
-                        </div>
-                      </section>
-                    )}
-
-                    {character.profile.specialty && (
-                      <section>
-                        <h3 className="text-lg font-semibold text-rose-400 mb-3 flex items-center">
-                          <span className="w-1 h-6 bg-rose-500 rounded-full mr-3"></span>
-                          專長與興趣
-                        </h3>
-                        <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50 text-gray-300 leading-relaxed whitespace-pre-wrap">
-                          {character.profile.specialty}
-                        </div>
-                      </section>
-                    )}
-
-                    {character.profile.quote && (
-                      <section>
-                        <h3 className="text-lg font-semibold text-cyan-400 mb-3 flex items-center">
-                          <span className="w-1 h-6 bg-cyan-500 rounded-full mr-3"></span>
-                          語氣示例
-                        </h3>
-                        <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50 text-gray-300 leading-relaxed whitespace-pre-wrap italic border-l-4 border-l-cyan-500">
-                          {character.profile.quote}
-                        </div>
-                      </section>
-                    )}
-                  </>
+                  </div>
                 )}
               </div>
             )}
@@ -840,6 +1157,145 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                   ))}
                 </div>
                 {currentCharacterImages.length === 0 && <p className="text-sm text-gray-500 text-center">此角色尚無圖片。</p>}
+              </div>
+            )}
+
+            {activeTab === 'changelog' && (
+              <div className="animate-fadeIn">
+                <h3 className="text-lg font-semibold text-gray-200 mb-5">修改紀錄</h3>
+                {!editedCharacter.modLog || editedCharacter.modLog.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <p className="text-sm">尚無修改紀錄</p>
+                    <p className="text-xs mt-1">登入後儲存角色資料即開始記錄</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {[...editedCharacter.modLog].reverse().map((entry, i) => {
+                      const isExpanded = expandedLogIndices.has(i);
+                      const toggle = () => setExpandedLogIndices(prev => {
+                        const next = new Set(prev);
+                        if (next.has(i)) next.delete(i); else next.add(i);
+                        return next;
+                      });
+                      const isEditingThisNote = editingNoteIndex === i;
+                      return (
+                        <div key={i} className="rounded-lg border border-gray-700 overflow-hidden">
+                          {/* 紀錄 header — 整列點擊可展開/收合 */}
+                          <div className="px-4 py-2.5 bg-gray-800/80">
+                            <div
+                              onClick={toggle}
+                              className="flex items-center gap-2 cursor-pointer hover:bg-gray-700/60 -mx-2 px-2 py-1 rounded transition-colors select-none"
+                            >
+                              <span className="text-gray-500 text-sm">{isExpanded ? '▾' : '▸'}</span>
+                              <span className="font-semibold text-indigo-400 text-sm">{entry.by}</span>
+                              <span className="text-gray-600">·</span>
+                              <span className="text-gray-400 text-xs">{new Date(entry.at).toLocaleString()}</span>
+                              {entry.changes && entry.changes.length > 0 && (
+                                <span className="text-xs text-gray-500">{entry.changes.length} 項變更</span>
+                              )}
+                              <div className="ml-auto flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                {/* 新增/編輯備註按鈕 */}
+                                {!isEditingThisNote && (
+                                  <button
+                                    onClick={() => { setEditingNoteIndex(i); setEditingNoteText(entry.note || ''); }}
+                                    className="text-xs text-gray-500 hover:text-yellow-400 px-1.5 py-0.5 rounded hover:bg-yellow-900/20 transition-colors"
+                                    title={entry.note ? '編輯備註' : '新增備註'}
+                                  >
+                                    {entry.note ? '✏️ 備註' : '+ 備註'}
+                                  </button>
+                                )}
+                                {/* 管理者刪除按鈕 */}
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm('確定刪除此筆修改紀錄？')) handleDeleteLogEntry(i);
+                                    }}
+                                    className="text-xs text-gray-600 hover:text-red-400 px-1 py-0.5 rounded hover:bg-red-900/20 transition-colors"
+                                    title="刪除此筆紀錄"
+                                  >
+                                    🗑
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            {/* 備註顯示 or 編輯區 */}
+                            {isEditingThisNote ? (
+                              <div className="mt-2 flex gap-2" onClick={e => e.stopPropagation()}>
+                                <textarea
+                                  autoFocus
+                                  value={editingNoteText}
+                                  onChange={e => setEditingNoteText(e.target.value)}
+                                  placeholder="輸入備註說明..."
+                                  rows={2}
+                                  className="flex-1 px-2 py-1 rounded bg-gray-900 border border-yellow-700/50 text-xs text-white resize-none focus:border-yellow-500 outline-none"
+                                />
+                                <div className="flex flex-col gap-1">
+                                  <button
+                                    onClick={() => handleSaveNoteForEntry(i)}
+                                    className="text-xs bg-yellow-700 hover:bg-yellow-600 text-white px-2 py-1 rounded"
+                                  >
+                                    儲存
+                                  </button>
+                                  <button
+                                    onClick={() => { setEditingNoteIndex(null); setEditingNoteText(''); }}
+                                    className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded"
+                                  >
+                                    取消
+                                  </button>
+                                </div>
+                              </div>
+                            ) : entry.note ? (
+                              <div className="mt-1.5 text-xs text-yellow-300/80 bg-yellow-900/20 border border-yellow-800/30 rounded px-2 py-1">
+                                💬 {entry.note}
+                              </div>
+                            ) : null}
+                          </div>
+                          {/* Changes — 展開才顯示 */}
+                          {isExpanded && (
+                            entry.changes && entry.changes.length > 0 ? (
+                              <div className="divide-y divide-gray-800/60 border-t border-gray-700">
+                                {entry.changes.map((change: ModLogChange, j: number) => {
+                                  const diffLines = computeLineDiff(change.before, change.after);
+                                  return (
+                                    <div key={j} className="px-4 py-3 bg-gray-900/40">
+                                      <div className="text-xs font-mono text-gray-500 mb-2 flex items-center gap-1">
+                                        <span className="text-yellow-600">@@</span>
+                                        <span>{change.label}</span>
+                                      </div>
+                                      {diffLines.length === 0 ? (
+                                        <div className="text-xs text-gray-600 italic">（無變更）</div>
+                                      ) : (
+                                        <div className="font-mono text-xs max-h-40 overflow-y-auto space-y-0.5">
+                                          {diffLines.map((dl, li) => (
+                                            <div
+                                              key={li}
+                                              className={`flex gap-1 px-2 py-0.5 rounded ${
+                                                dl.type === 'removed'
+                                                  ? 'bg-red-950/40 text-red-300'
+                                                  : 'bg-green-950/40 text-green-300'
+                                              }`}
+                                            >
+                                              <span className="opacity-70 select-none flex-shrink-0">
+                                                {dl.type === 'removed' ? '−' : '＋'}
+                                              </span>
+                                              <span className="break-all">{dl.text || ' '}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <div className="px-4 py-3 text-xs text-gray-600 bg-gray-900/40 border-t border-gray-700">（無詳細變更資訊）</div>
+                            )
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -134,6 +134,7 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
               alt="Crop me"
               src={imageSrc}
               onLoad={onImageLoad}
+              crossOrigin="anonymous"
               style={{ maxHeight: '65vh' }}
             />
           </ReactCrop>
