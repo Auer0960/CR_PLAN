@@ -82,6 +82,12 @@ function prepareMarkdown(text: string): string {
       result.push('');
     }
 
+    // 連續空白行：插入一個只有空格的行讓 Markdown 保留間距
+    if (empty && prevResult.trim() === '' && result.length > 0) {
+      result.push('&nbsp;');
+      continue;
+    }
+
     result.push(line);
 
     if (heading && !nextEmpty) {
@@ -953,7 +959,7 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                       <div key={field.id} className="py-5 first:pt-0">
                         <h4 className="text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-2">{field.label}</h4>
                         {field.content ? (
-                          <div className="text-gray-200 text-sm leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-bold [&_em]:italic [&_h1]:text-lg [&_h1]:font-bold [&_h2]:text-base [&_h2]:font-bold [&_h3]:text-sm [&_h3]:font-semibold [&_p]:mb-2 [&_li]:mb-1">
+                          <div className="text-gray-200 text-sm leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-bold [&_em]:italic [&_h1]:text-lg [&_h1]:font-bold [&_h2]:text-base [&_h2]:font-bold [&_h3]:text-sm [&_h3]:font-semibold [&_p]:mb-3 [&_li]:mb-1 [&_p:empty]:mt-2">
                             <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{prepareMarkdown(field.content)}</ReactMarkdown>
                           </div>
                         ) : (
