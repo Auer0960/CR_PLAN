@@ -1043,6 +1043,22 @@ const App: React.FC = () => {
                 if ((orig.notes || '') !== (finalChar.notes || ''))
                     changes.push({ field: 'notes', label: '備註', before: orig.notes || '', after: finalChar.notes || '' });
 
+                // 一般資料欄位
+                if ((orig.characterCode || '') !== (finalChar.characterCode || ''))
+                    changes.push({ field: 'characterCode', label: '角色編號', before: orig.characterCode || '', after: finalChar.characterCode || '' });
+                if ((orig.birthday || '') !== (finalChar.birthday || ''))
+                    changes.push({ field: 'birthday', label: '生日', before: orig.birthday || '', after: finalChar.birthday || '' });
+                if ((orig.title || '') !== (finalChar.title || ''))
+                    changes.push({ field: 'title', label: '稱號', before: orig.title || '', after: finalChar.title || '' });
+                if ((orig.height || '') !== (finalChar.height || ''))
+                    changes.push({ field: 'height', label: '身高', before: orig.height || '', after: finalChar.height || '' });
+                if ((orig.weight || '') !== (finalChar.weight || ''))
+                    changes.push({ field: 'weight', label: '體重', before: orig.weight || '', after: finalChar.weight || '' });
+                if ((orig.bust || '') !== (finalChar.bust || ''))
+                    changes.push({ field: 'bust', label: '胸圍', before: orig.bust || '', after: finalChar.bust || '' });
+                if ((orig.introduction || '') !== (finalChar.introduction || ''))
+                    changes.push({ field: 'introduction', label: '人物介紹', before: orig.introduction || '', after: finalChar.introduction || '' });
+
                 // profileFields
                 const oldFields = getProfileFieldsFromChar(orig);
                 const newFields = getProfileFieldsFromChar(finalChar);
@@ -1083,7 +1099,8 @@ const App: React.FC = () => {
                 const formatRel = (r: Relationship) => {
                     const otherId = r.source === selectedCharacter.id ? r.target : r.source;
                     const otherName = prev.find(c => c.id === otherId)?.name || '?';
-                    return `${otherName}：${r.label}`;
+                    const desc = (r.description || '').trim();
+                    return desc ? `${otherName}：${r.label}\n  └ ${desc}` : `${otherName}：${r.label}`;
                 };
                 const addedRels = finalRels.filter(r => !origRelMap.has(r.id));
                 const removedRels = snapshot.relationships.filter(r => !finalRelMap.has(r.id));
@@ -1098,9 +1115,33 @@ const App: React.FC = () => {
                 }
 
                 if (changes.length > 0) {
-                    const logEntry = { at: Date.now(), by: currentUser.name, changes };
+                    const now = Date.now();
+                    const MERGE_WINDOW_MS = 10 * 60 * 1000; // 10 分鐘
+                    const existingLog = finalChar.modLog || [];
+                    const lastEntry = existingLog[existingLog.length - 1];
+                    const canMerge = lastEntry
+                        && lastEntry.by === currentUser.name
+                        && (now - lastEntry.at) < MERGE_WINDOW_MS;
+
+                    let newModLog: typeof existingLog;
+                    if (canMerge && lastEntry.changes) {
+                        const changeMap = new Map(lastEntry.changes.map(ch => [ch.field, { ...ch }]));
+                        for (const ch of changes) {
+                            const existing = changeMap.get(ch.field);
+                            if (existing) {
+                                existing.after = ch.after; // 保留最早 before，更新 after
+                            } else {
+                                changeMap.set(ch.field, { ...ch });
+                            }
+                        }
+                        newModLog = [...existingLog.slice(0, -1), { ...lastEntry, at: now, changes: Array.from(changeMap.values()) }];
+                    } else {
+                        const logEntry = { at: now, by: currentUser.name, changes };
+                        newModLog = [...existingLog, logEntry];
+                    }
+
                     return prev.map(c => c.id === selectedCharacter.id
-                        ? { ...c, modLog: [...(c.modLog || []), logEntry] }
+                        ? { ...c, modLog: newModLog }
                         : c
                     );
                 }
