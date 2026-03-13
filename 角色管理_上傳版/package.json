@@ -1,0 +1,36 @@
+{
+  "name": "角色管理",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "homepage": "https://Auer0960.github.io/CR_PLAN/",
+  "scripts": {
+    "dev": "node scripts/copy_user_data.js && vite --open",
+    "build": "node scripts/copy_user_data.js && vite build",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist -b deploy",
+    "import:timeline:csv": "node scripts/import_cr_csv_to_timeline.mjs"
+  },
+  "dependencies": {
+    "@google/genai": "^1.19.0",
+    "@types/react-virtualized-auto-sizer": "^1.0.4",
+    "@types/react-window": "^1.8.8",
+    "d3": "^7.9.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-image-crop": "^11.0.10",
+    "react-virtualized-auto-sizer": "^1.0.26",
+    "react-virtuoso": "^4.14.1",
+    "react-window": "^2.2.3",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "gh-pages": "^6.3.0",
+    "sharp": "^0.34.5",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
