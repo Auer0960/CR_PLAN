@@ -199,10 +199,14 @@ export async function deleteStorageImages(storagePaths: string[]): Promise<void>
 /** 從 Supabase Storage URL 解析出 bucket 內的相對路徑（bucket 名稱之後的部分） */
 export function extractStoragePath(url: string): string {
   if (!url || !url.startsWith('http')) return '';
+  // 支援兩種 URL 格式：
+  //   /storage/v1/object/public/character-images/filename.webp
+  //   /storage/v1/render/image/public/character-images/filename.webp
   const marker = '/character-images/';
   const idx = url.indexOf(marker);
   if (idx === -1) return '';
-  return decodeURIComponent(url.slice(idx + marker.length).split('?')[0]);
+  const raw = url.slice(idx + marker.length).split('?')[0].split('#')[0];
+  return decodeURIComponent(raw);
 }
 
 /** 掃描 character-images bucket 根目錄的所有圖片檔（排除資料夾） */
