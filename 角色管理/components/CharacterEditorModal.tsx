@@ -1294,8 +1294,8 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                                   autoFocus
                                   value={editingNoteText}
                                   onChange={e => setEditingNoteText(e.target.value)}
-                                  placeholder="輸入備註說明..."
-                                  rows={2}
+                                  placeholder="輸入備註說明（Shift+Enter 換行）..."
+                                  rows={3}
                                   className="flex-1 px-2 py-1 rounded bg-gray-900 border border-yellow-700/50 text-xs text-white resize-none focus:border-yellow-500 outline-none"
                                 />
                                 <div className="flex flex-col gap-1">
@@ -1314,7 +1314,7 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                                 </div>
                               </div>
                             ) : entry.note ? (
-                              <div className="mt-1.5 text-xs text-yellow-300/80 bg-yellow-900/20 border border-yellow-800/30 rounded px-2 py-1">
+                              <div className="mt-1.5 text-xs text-yellow-300/80 bg-yellow-900/20 border border-yellow-800/30 rounded px-2 py-1 whitespace-pre-wrap">
                                 💬 {entry.note}
                               </div>
                             ) : null}
