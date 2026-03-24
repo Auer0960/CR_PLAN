@@ -1324,7 +1324,7 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                             entry.changes && entry.changes.length > 0 ? (
                               <div className="divide-y divide-gray-800/60 border-t border-gray-700">
                                 {entry.changes.map((change: ModLogChange, j: number) => {
-                                  const diffLines = computeLineDiff(change.before, change.after);
+                                  const diffLines = computeLineDiff(change.before ?? '', change.after ?? '');
                                   return (
                                     <div key={j} className="px-4 py-3 bg-gray-900/40">
                                       <div className="text-xs font-mono text-gray-500 mb-2 flex items-center gap-1">
