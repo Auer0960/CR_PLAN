@@ -807,8 +807,20 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                   </div>
                 </div>
 
-                {/* Row 3: 身高 + 體重 + 胸圍 */}
+                {/* Row 3: 實際年齡 + 身高 + 體重 + 胸圍 */}
                 <div className="flex gap-3 flex-wrap">
+                  <div className="w-24 flex-shrink-0">
+                    <label htmlFor="age" className="block text-sm font-medium text-gray-300 mb-1">實際年齡</label>
+                    <input
+                      type="text"
+                      id="age"
+                      name="age"
+                      value={editedCharacter.age || ''}
+                      onChange={handleChange}
+                      placeholder="25歲"
+                      className="w-full p-2 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 text-sm placeholder:text-gray-700"
+                    />
+                  </div>
                   <div className="w-24 flex-shrink-0">
                     <label htmlFor="height" className="block text-sm font-medium text-gray-300 mb-1">身高</label>
                     <input
