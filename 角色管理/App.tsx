@@ -1514,6 +1514,7 @@ const App: React.FC = () => {
                 onUpdateImage={setCharacterImages}
                 onDeleteImage={handleDeleteImage}
                 onAddTagToCategory={handleAddTagToCategory}
+                currentUser={currentUser}
             />
 
             {/* Toast 通知 */}

@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Character, CharacterImage, TagCategory, TagWithColor, Tag } from '../types';
+import type { Character, CharacterImage, TagCategory, TagWithColor, Tag, AppUser } from '../types';
 import { CloseIcon, TagsIcon, TrashIcon } from './Icons';
 import TagSelectorModal from './TagSelectorModal';
+
+const ADMIN_CODE = '01069';
 
 // Helper to resolve image paths with base URL
 const resolveImagePath = (imagePath: string | undefined): string => {
@@ -23,9 +25,11 @@ interface ImageDetailModalProps {
   onUpdateImage: (updater: React.SetStateAction<CharacterImage[]>) => void;
   onDeleteImage: (imageId: string) => void;
   onAddTagToCategory: (label: string, categoryName: string) => Tag | null;
+  currentUser: AppUser | null;
 }
 
-const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, image, character, tagCategories, allTags, onUpdateImage, onDeleteImage, onAddTagToCategory }) => {
+const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, image, character, tagCategories, allTags, onUpdateImage, onDeleteImage, onAddTagToCategory, currentUser }) => {
+  const isAdmin = currentUser?.code === ADMIN_CODE;
   const [isTagSelectorOpen, setIsTagSelectorOpen] = useState(false);
   const [localNotes, setLocalNotes] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -129,16 +133,20 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, im
             </div>
             
             <div className="mt-6 pt-4 border-t border-gray-700">
-                <button 
-                    onClick={handleDelete} 
-                    className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-left transition-colors duration-200 ${
-                        confirmingDelete
-                            ? 'bg-red-600 text-white'
-                            : 'text-red-400 hover:bg-red-900/50'
-                    }`}
-                >
-                    {confirmingDelete ? '確定刪除？' : <><TrashIcon className="w-5 h-5"/> 刪除圖片</>}
-                </button>
+                {isAdmin ? (
+                    <button
+                        onClick={handleDelete}
+                        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md transition-colors duration-200 ${
+                            confirmingDelete
+                                ? 'bg-red-600 text-white'
+                                : 'text-red-400 hover:bg-red-900/50'
+                        }`}
+                    >
+                        {confirmingDelete ? '確定刪除？' : <><TrashIcon className="w-5 h-5"/> 刪除圖片</>}
+                    </button>
+                ) : (
+                    <p className="text-xs text-gray-500 text-center">圖片無法刪除，請聯絡管理者</p>
+                )}
             </div>
           </div>
         </div>
