@@ -1237,25 +1237,49 @@ const App: React.FC = () => {
 
     const handleDeleteImage = (imageId: string) => {
         const imageToDelete = characterImages.find(img => img.id === imageId);
-        if (!imageToDelete) return;
 
-        // 1. Remove from state
-        setCharacterImages(prev => prev.filter(img => img.id !== imageId));
+        // 從 Storage URL 提取檔名，用於刪除 Storage 實體檔案
+        const extractStoragePath = (url: string | undefined): string | null => {
+            if (!url) return null;
+            const marker = 'character-images/';
+            const idx = url.indexOf(marker);
+            if (idx < 0) return null;
+            return url.substring(idx + marker.length).split('?')[0];
+        };
 
-        // 2. Add to deleted IDs
-        setDeletedImageIds(prev => {
-            const next = new Set(prev);
-            next.add(imageId);
-            return next;
-        });
-
-        // 3. Remove from character's image property if it matches
-        setCharacters(prev => prev.map(char => {
-            if (char.image === imageToDelete.imageDataUrl) {
-                return { ...char, image: undefined };
+        // 刪除 Supabase Storage 中的主圖與縮圖
+        const deleteFromStorage = (url: string | undefined, fallbackPath?: string) => {
+            const filePath = extractStoragePath(url) || fallbackPath;
+            if (!filePath) return;
+            const paths = [filePath];
+            if (!filePath.startsWith('thumbnails/') && !filePath.startsWith('avatars/')) {
+                paths.push(`thumbnails/${filePath}`);
             }
-            return char;
-        }));
+            supabase.storage.from('character-images').remove(paths).then(({ error }) => {
+                if (error) console.warn('Storage 刪除失敗（不影響應用）:', error.message);
+            });
+        };
+
+        if (imageToDelete) {
+            // 有 characterImages 記錄：正常刪除流程
+            setCharacterImages(prev => prev.filter(img => img.id !== imageId));
+            setDeletedImageIds(prev => {
+                const next = new Set(prev);
+                next.add(imageId);
+                return next;
+            });
+            setCharacters(prev => prev.map(char => {
+                if (char.image === imageToDelete.imageDataUrl) {
+                    return { ...char, image: undefined };
+                }
+                return char;
+            }));
+            deleteFromStorage(imageToDelete.imageDataUrl);
+        } else {
+            // Storage 模式下沒有記錄的圖片：imageId 即為檔名，直接刪 Storage
+            // imageId 格式：charId_uuid.webp
+            deleteFromStorage(undefined, imageId);
+        }
 
         setIsImageDetailModalOpen(false);
         setSelectedImage(null);
