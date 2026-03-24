@@ -1,0 +1,78 @@
+name: Daily Supabase Backup
+
+on:
+  schedule:
+    - cron: '0 18 * * *'   # 每天 UTC 18:00 = 台灣時間 02:00
+  workflow_dispatch:         # 也可以手動觸發
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Fetch Supabase data and save
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          mkdir -p backups
+
+          # 取得今天日期
+          DATE=$(date +%Y-%m-%d)
+
+          # 從 Supabase 抓取 app_data
+          HTTP_CODE=$(curl -s -o backups/app_data_${DATE}.json -w "%{http_code}" \
+            "${SUPABASE_URL}/rest/v1/app_data?key=eq.main&select=data" \
+            -H "apikey: ${SUPABASE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_KEY}")
+
+          echo "HTTP status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ 備份失敗，HTTP 狀態碼: $HTTP_CODE"
+            cat backups/app_data_${DATE}.json
+            exit 1
+          fi
+
+          # 確認資料不是空的
+          CHAR_COUNT=$(cat backups/app_data_${DATE}.json | python3 -c "
+          import json, sys
+          rows = json.load(sys.stdin)
+          if rows and rows[0].get('data', {}).get('characters'):
+              print(len(rows[0]['data']['characters']))
+          else:
+              print(0)
+          ")
+
+          echo "✅ 角色數量: ${CHAR_COUNT}"
+
+          if [ "$CHAR_COUNT" = "0" ] || [ "$CHAR_COUNT" = "12" ]; then
+            echo "⚠️ 警告：角色數量為 ${CHAR_COUNT}，可能是暫代資料，跳過備份"
+            rm -f backups/app_data_${DATE}.json
+            exit 0
+          fi
+
+          # 只保留最近 30 天備份
+          ls -t backups/app_data_*.json | tail -n +31 | xargs -r rm
+
+          # 更新 latest 捷徑
+          cp backups/app_data_${DATE}.json backups/latest.json
+
+          echo "備份完成：backups/app_data_${DATE}.json（${CHAR_COUNT} 位角色）"
+
+      - name: Commit backup
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add backups/
+          # 如果沒有變更就跳過 commit
+          git diff --cached --quiet && echo "無新備份" || git commit -m "backup: $(date +%Y-%m-%d) Supabase app_data"
+          git push
