@@ -1255,6 +1255,13 @@ const App: React.FC = () => {
             setCharacters(prev => prev.map(char =>
                 char.image === imageToDelete.imageDataUrl ? { ...char, image: undefined } : char
             ));
+
+            // ── 同步更新 Storage 掃描清單（若目前在 Storage 模式）──
+            // 用 imageDataUrl 比對 storageImages 的 imageUrl 來找到對應項目
+            setStorageImages(prev => prev
+                ? prev.filter(si => si.imageUrl !== imageToDelete.imageDataUrl)
+                : null
+            );
         } else {
             // ── Storage 模式：imageId 本身就是檔名，直接刪 Storage ──
             pathsToDelete.push(imageId);
@@ -1263,11 +1270,14 @@ const App: React.FC = () => {
             setStorageImages(prev => prev ? prev.filter(si => si.id !== imageId) : null);
         }
 
-        // 非同步刪除 Storage 檔案（失敗不阻塞 UI）
+        // 非同步刪除 Storage 檔案（失敗不阻塞 UI，但記錄詳細錯誤）
         if (pathsToDelete.length > 0) {
+            console.log('[handleDeleteImage] 準備刪除 Storage 路徑：', pathsToDelete);
             deleteStorageImages(pathsToDelete).catch(e =>
                 console.warn('[handleDeleteImage] Storage 刪除失敗:', e)
             );
+        } else {
+            console.warn('[handleDeleteImage] pathsToDelete 為空，Storage 實體檔案未刪除。imageDataUrl:', imageToDelete?.imageDataUrl);
         }
 
         setIsImageDetailModalOpen(false);
