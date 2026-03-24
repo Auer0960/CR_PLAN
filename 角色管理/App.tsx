@@ -7,7 +7,7 @@ import type { AppData, Character, Relationship, TagCategory, CharacterImage, AiP
 // Import services
 import { parseWithGemini } from './services/geminiService';
 import { parseWithOpenAI } from './services/openaiService';
-import { loadAppData, saveAppData, loadTimelineData, saveTimelineData, getUserByCode, deleteStorageImages, extractStoragePath, type StorageImageItem } from './services/supabaseService';
+import { loadAppData, saveAppData, loadTimelineData, saveTimelineData, getUserByCode, deleteStorageImages, extractStoragePath, type StorageImageItem, type DeleteStorageResult } from './services/supabaseService';
 import { supabase } from './supabase';
 
 // Import components
@@ -156,6 +156,15 @@ const App: React.FC = () => {
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'readonly' | 'error'>('idle');
     const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
     const [saveError, setSaveError] = useState<string | null>(null);
+
+    // Toast 通知（短暫顯示操作結果）
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warn' } | null>(null);
+    const toastTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const showToast = React.useCallback((message: string, type: 'success' | 'error' | 'warn' = 'success', duration = 4000) => {
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        setToast({ message, type });
+        toastTimerRef.current = setTimeout(() => setToast(null), duration);
+    }, []);
 
     // User login (使用者代碼)
     const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -1270,18 +1279,27 @@ const App: React.FC = () => {
             setStorageImages(prev => prev ? prev.filter(si => si.id !== imageId) : null);
         }
 
-        // 非同步刪除 Storage 檔案（失敗不阻塞 UI，但記錄詳細錯誤）
-        if (pathsToDelete.length > 0) {
-            console.log('[handleDeleteImage] 準備刪除 Storage 路徑：', pathsToDelete);
-            deleteStorageImages(pathsToDelete).catch(e =>
-                console.warn('[handleDeleteImage] Storage 刪除失敗:', e)
-            );
-        } else {
-            console.warn('[handleDeleteImage] pathsToDelete 為空，Storage 實體檔案未刪除。imageDataUrl:', imageToDelete?.imageDataUrl);
-        }
-
         setIsImageDetailModalOpen(false);
         setSelectedImage(null);
+
+        // 刪除 Storage 實體檔案並顯示結果提示
+        if (pathsToDelete.length > 0) {
+            console.log('[handleDeleteImage] 準備刪除 Storage 路徑：', pathsToDelete);
+            const result: DeleteStorageResult = await deleteStorageImages(pathsToDelete).catch((e): DeleteStorageResult => {
+                console.error('[handleDeleteImage] Storage 刪除例外：', e);
+                return { deleted: 0, error: String(e) };
+            });
+
+            if (result.error) {
+                showToast(`圖片記錄已移除，但 Storage 刪除失敗：${result.error}`, 'error', 6000);
+            } else if (result.deleted === 0) {
+                showToast('圖片記錄已移除，但 Storage 實體未刪除（可能需要在 Supabase 開放 DELETE 權限）', 'warn', 6000);
+            } else {
+                showToast('圖片刪除成功', 'success');
+            }
+        } else {
+            showToast('圖片記錄已移除（無 Storage 路徑可刪）', 'warn');
+        }
     };
 
     // --- Data Management Handlers ---
@@ -1497,6 +1515,21 @@ const App: React.FC = () => {
                 onDeleteImage={handleDeleteImage}
                 onAddTagToCategory={handleAddTagToCategory}
             />
+
+            {/* Toast 通知 */}
+            {toast && (
+                <div
+                    className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2 px-5 py-3 rounded-xl shadow-2xl text-sm font-medium transition-all duration-300 ${
+                        toast.type === 'success' ? 'bg-green-600 text-white' :
+                        toast.type === 'error'   ? 'bg-red-600 text-white' :
+                                                   'bg-amber-500 text-white'
+                    }`}
+                >
+                    {toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : '⚠️'}
+                    {toast.message}
+                    <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100 text-lg leading-none">×</button>
+                </div>
+            )}
         </div>
     );
 };

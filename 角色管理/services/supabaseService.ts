@@ -187,13 +187,28 @@ export interface StorageImageItem {
   charIdPrefix: string; // 從檔名提取的角色 ID 前綴（用來反查）
 }
 
-/** 從 Supabase Storage 刪除指定路徑的檔案（含縮圖）。路徑不存在時靜默忽略。 */
-export async function deleteStorageImages(storagePaths: string[]): Promise<void> {
-  if (!storagePaths.length) return;
-  const { error } = await supabase.storage
+export interface DeleteStorageResult {
+  deleted: number;   // 實際被刪除的檔案數
+  error: string | null;
+}
+
+/** 從 Supabase Storage 刪除指定路徑的檔案（含縮圖）。回傳刪除結果。 */
+export async function deleteStorageImages(storagePaths: string[]): Promise<DeleteStorageResult> {
+  if (!storagePaths.length) return { deleted: 0, error: null };
+  const { data, error } = await supabase.storage
     .from('character-images')
     .remove(storagePaths);
-  if (error) console.warn('[Storage] 刪除失敗（可能檔案已不存在）:', error.message);
+  if (error) {
+    console.error('[Storage] 刪除 API 錯誤:', error.message);
+    return { deleted: 0, error: error.message };
+  }
+  const deleted = data?.length ?? 0;
+  if (deleted === 0) {
+    console.warn('[Storage] ⚠️ 0 個檔案被移除（路徑不存在或 RLS 禁止刪除）。路徑：', storagePaths);
+  } else {
+    console.log('[Storage] ✅ 成功刪除：', data!.map((f: { name: string }) => f.name));
+  }
+  return { deleted, error: null };
 }
 
 /** 從 Supabase Storage URL 解析出 bucket 內的相對路徑（bucket 名稱之後的部分） */
