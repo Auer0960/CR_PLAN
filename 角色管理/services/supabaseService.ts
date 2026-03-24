@@ -21,10 +21,10 @@ export async function loadAppData(): Promise<AppData | null> {
   return data?.data as AppData ?? null;
 }
 
-export async function saveAppData(appData: AppData): Promise<void> {
+export async function saveAppData(appData: AppData, clientSessionId: string): Promise<void> {
   const { error } = await supabase
     .from('app_data')
-    .upsert({ key: 'main', data: appData, updated_at: new Date().toISOString() });
+    .upsert({ key: 'main', data: appData, updated_at: new Date().toISOString(), client_session_id: clientSessionId });
 
   if (error) throw error;
 }

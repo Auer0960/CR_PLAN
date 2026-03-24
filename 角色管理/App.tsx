@@ -174,8 +174,9 @@ const App: React.FC = () => {
 
     // Realtime sync toast
     const [realtimeToast, setRealtimeToast] = useState<string | null>(null);
-    const isSavingRef = React.useRef(false); // 自己儲存時不重新載入
-    const lastSaveTsRef = React.useRef<number>(0); // 上次存檔的時間戳，用來濾掉延遲到的 Realtime 通知
+    const isSavingRef = React.useRef(false); // 自己儲存時不重新載入（短暫 flag，補漏用）
+    // 每個 browser tab 有唯一 session ID，存檔時寫入 DB，Realtime 通知回來比對，精準識別「是否自己的更新」
+    const clientSessionIdRef = React.useRef(Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
     const isRealtimeUpdateRef = React.useRef(false); // Realtime 更新時設為 true，避免觸發 hasUserEditedRef
     // Prevents save effects from firing before the initial data load completes
     const isDataReadyRef = React.useRef(false);
@@ -856,10 +857,12 @@ const App: React.FC = () => {
                 schema: 'public',
                 table: 'app_data',
                 filter: 'key=eq.main',
-            }, async () => {
-                // 自己儲存觸發的通知，略過（包含 Realtime 延遲抵達的情況）
-                if (isSavingRef.current) return;
-                if (Date.now() - lastSaveTsRef.current < 30000) return; // 30 秒內的通知視為自己的存檔，略過
+            }, async (payload: any) => {
+                // 用 session ID 精準識別「是否自己的更新」，避免多人協作時誤判
+                const incomingSessionId = payload?.new?.client_session_id;
+                if (incomingSessionId && incomingSessionId === clientSessionIdRef.current) return;
+                // 補漏：session ID 比對失敗（舊資料或欄位尚未加）時，用短暫 flag 兜底
+                if (!incomingSessionId && isSavingRef.current) return;
                 // 正在編輯角色時不打斷，只在背景靜默更新
                 const fresh = await loadAppData();
                 if (!fresh) return;
@@ -909,7 +912,6 @@ const App: React.FC = () => {
         const saveData = async () => {
             try {
                 isSavingRef.current = true;
-                lastSaveTsRef.current = Date.now(); // 記錄存檔時間，用來濾掉延遲的 Realtime 通知
                 setSaveStatus('saving');
                 setSaveError(null);
 
@@ -923,7 +925,7 @@ const App: React.FC = () => {
                     deletedImageIds: Array.from(deletedImageIds),
                 };
 
-                await saveAppData(appData);
+                await saveAppData(appData, clientSessionIdRef.current);
                 setSaveStatus('saved');
                 setLastSavedAt(Date.now());
                 // 寫活動紀錄（不阻塞 UI）
