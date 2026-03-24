@@ -187,6 +187,24 @@ export interface StorageImageItem {
   charIdPrefix: string; // 從檔名提取的角色 ID 前綴（用來反查）
 }
 
+/** 從 Supabase Storage 刪除指定路徑的檔案（含縮圖）。路徑不存在時靜默忽略。 */
+export async function deleteStorageImages(storagePaths: string[]): Promise<void> {
+  if (!storagePaths.length) return;
+  const { error } = await supabase.storage
+    .from('character-images')
+    .remove(storagePaths);
+  if (error) console.warn('[Storage] 刪除失敗（可能檔案已不存在）:', error.message);
+}
+
+/** 從 Supabase Storage URL 解析出 bucket 內的相對路徑（bucket 名稱之後的部分） */
+export function extractStoragePath(url: string): string {
+  if (!url || !url.startsWith('http')) return '';
+  const marker = '/character-images/';
+  const idx = url.indexOf(marker);
+  if (idx === -1) return '';
+  return decodeURIComponent(url.slice(idx + marker.length).split('?')[0]);
+}
+
 /** 掃描 character-images bucket 根目錄的所有圖片檔（排除資料夾） */
 export async function listStorageImages(): Promise<StorageImageItem[]> {
   const { data, error } = await supabase.storage
