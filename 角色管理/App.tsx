@@ -7,7 +7,7 @@ import type { AppData, Character, Relationship, TagCategory, CharacterImage, AiP
 // Import services
 import { parseWithGemini } from './services/geminiService';
 import { parseWithOpenAI } from './services/openaiService';
-import { loadAppData, saveAppData, loadTimelineData, saveTimelineData, getUserByCode } from './services/supabaseService';
+import { loadAppData, saveAppData, loadTimelineData, saveTimelineData, getUserByCode, deleteStorageImages, extractStoragePath } from './services/supabaseService';
 import { supabase } from './supabase';
 
 // Import components
@@ -1235,50 +1235,36 @@ const App: React.FC = () => {
         setIsImageDetailModalOpen(true);
     };
 
-    const handleDeleteImage = (imageId: string) => {
+    const handleDeleteImage = async (imageId: string) => {
         const imageToDelete = characterImages.find(img => img.id === imageId);
-
-        // 從 Storage URL 提取檔名，用於刪除 Storage 實體檔案
-        const extractStoragePath = (url: string | undefined): string | null => {
-            if (!url) return null;
-            const marker = 'character-images/';
-            const idx = url.indexOf(marker);
-            if (idx < 0) return null;
-            return url.substring(idx + marker.length).split('?')[0];
-        };
-
-        // 刪除 Supabase Storage 中的主圖與縮圖
-        const deleteFromStorage = (url: string | undefined, fallbackPath?: string) => {
-            const filePath = extractStoragePath(url) || fallbackPath;
-            if (!filePath) return;
-            const paths = [filePath];
-            if (!filePath.startsWith('thumbnails/') && !filePath.startsWith('avatars/')) {
-                paths.push(`thumbnails/${filePath}`);
-            }
-            supabase.storage.from('character-images').remove(paths).then(({ error }) => {
-                if (error) console.warn('Storage 刪除失敗（不影響應用）:', error.message);
-            });
-        };
+        const pathsToDelete: string[] = [];
 
         if (imageToDelete) {
-            // 有 characterImages 記錄：正常刪除流程
+            // ── 記錄模式：從 characterImages 找到記錄，從 URL 解析 Storage 路徑 ──
+            const mainPath = extractStoragePath(imageToDelete.imageDataUrl);
+            if (mainPath) {
+                pathsToDelete.push(mainPath);
+                pathsToDelete.push(`thumbnails/${mainPath}`);
+            }
+            const thumbPath = imageToDelete.thumbnailUrl ? extractStoragePath(imageToDelete.thumbnailUrl) : '';
+            if (thumbPath && thumbPath !== `thumbnails/${mainPath}`) pathsToDelete.push(thumbPath);
+
             setCharacterImages(prev => prev.filter(img => img.id !== imageId));
-            setDeletedImageIds(prev => {
-                const next = new Set(prev);
-                next.add(imageId);
-                return next;
-            });
-            setCharacters(prev => prev.map(char => {
-                if (char.image === imageToDelete.imageDataUrl) {
-                    return { ...char, image: undefined };
-                }
-                return char;
-            }));
-            deleteFromStorage(imageToDelete.imageDataUrl);
+            setDeletedImageIds(prev => { const next = new Set(prev); next.add(imageId); return next; });
+            setCharacters(prev => prev.map(char =>
+                char.image === imageToDelete.imageDataUrl ? { ...char, image: undefined } : char
+            ));
         } else {
-            // Storage 模式下沒有記錄的圖片：imageId 即為檔名，直接刪 Storage
-            // imageId 格式：charId_uuid.webp
-            deleteFromStorage(undefined, imageId);
+            // ── Storage 模式：imageId 本身就是檔名，直接刪 Storage ──
+            pathsToDelete.push(imageId);
+            pathsToDelete.push(`thumbnails/${imageId}`);
+        }
+
+        // 非同步刪除 Storage 檔案（失敗不阻塞 UI）
+        if (pathsToDelete.length > 0) {
+            deleteStorageImages(pathsToDelete).catch(e =>
+                console.warn('[handleDeleteImage] Storage 刪除失敗:', e)
+            );
         }
 
         setIsImageDetailModalOpen(false);
