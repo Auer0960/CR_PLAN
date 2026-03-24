@@ -1,0 +1,119 @@
+---
+description: CR 角色管理系統架構說明與修改規範（必讀）
+alwaysApply: true
+---
+
+# CR 角色管理系統 — AI 工作規範
+
+## 專案概述
+
+這是一個部署在 **GitHub Pages** 上的角色關係管理網頁應用，前端為 React + TypeScript（Vite 建構），資料儲存在 **Supabase**（雲端 PostgreSQL + Storage）。
+
+- **線上網址**：`https://Auer0960.github.io/CR_PLAN/`
+- **本地專案路徑**：`C:\Users\Auer0960\CR\角色管理`
+- **GitHub Repo**：`Auer0960/CR_PLAN`，部署分支：`deploy`，開發分支：`main`
+
+---
+
+## 技術架構
+
+### 前端（React + TypeScript）
+
+| 檔案 / 資料夾 | 說明 |
+|---|---|
+| `App.tsx` | 主元件，負責所有資料狀態管理與 Auto-save |
+| `types.ts` | 全域 TypeScript 型別定義（Character、Relationship 等）|
+| `components/` | 各頁面與 Modal 元件 |
+| `services/supabaseService.ts` | 所有 Supabase 讀寫操作集中在此 |
+| `supabase.ts` | Supabase 客戶端初始化（Key 從環境變數取得）|
+| `vite.config.ts` | Vite 建構設定，含 `base: '/CR_PLAN/'` |
+
+### 頁面（`activeView` 路由）
+
+| 頁面 | 元件 | 說明 |
+|---|---|---|
+| 關係圖 | `RelationshipGraph.tsx` | D3 force-directed 圖，以 `React.memo` 防止不必要重繪 |
+| 角色列表 | `CharacterListView.tsx` | 可篩選、搜尋、Tag 過濾 |
+| 圖片庫 | `ImageListView.tsx` | 支援記錄模式 / Storage 掃描模式 |
+| 時間軸 | `TimelineView.tsx` | 事件、地點、角色三維管理 |
+| Tag 管理 | `TagManagerView.tsx` | 分類 + 多選/單選模式設定 |
+| 名詞解釋 | `GlossaryView.tsx` | 術語庫 |
+| 設定 | `SettingsView.tsx` | 版本號、使用者管理、資料匯出/匯入 |
+
+### 後端（Supabase）
+
+| 資源 | 說明 |
+|---|---|
+| `app_data` 資料表 | 單一 row（key='main'），`data` 欄位存整個 AppData JSON |
+| `timeline_data` 資料表 | 時間軸資料，各角色 key 分開儲存 |
+| `users` 資料表 | 使用者代碼登入系統（code, name） |
+| `character-images` Storage bucket | 角色圖片與縮圖（`thumbnails/` 子目錄）|
+
+### 環境變數（不可洩漏，從 `.env.local` 或 GitHub Secrets 注入）
+
+```
+VITE_SUPABASE_URL=...       # Supabase 專案 URL
+VITE_SUPABASE_PUBLISHABLE_KEY=...  # Supabase Publishable Key（非 Service Role）
+```
+
+---
+
+## 資料流與 Auto-save 機制
+
+```
+使用者操作 → setState → useEffect 觸發（1 秒 debounce）→ saveAppData() → Supabase
+```
+
+**重要保護旗標（App.tsx）**：
+- `isDataReadyRef`：資料載入完成後才允許儲存
+- `isDataFromErrorRef`：若載入失敗（fallback 暫代資料），封鎖 Auto-save
+- `hasUserEditedRef`：只有使用者實際修改後才允許儲存
+
+---
+
+## 部署流程
+
+```
+git add → git commit → git push (main)
+  ↓
+GitHub Actions 自動執行 .github/workflows/deploy.yml
+  ↓
+npm run build → 推送 dist/ 到 deploy 分支 → GitHub Pages 更新
+```
+
+---
+
+## 版本號更新規則（必須遵守）
+
+每次修改程式後，**commit 前**必須同步更新版本號：
+
+### 版本號位置
+
+1. **`components/SettingsView.tsx`** 第 159 行：
+   ```tsx
+   <div className="mb-4 text-xs text-gray-500 font-mono">Version 0.1.0</div>
+   ```
+
+2. **`package.json`** 第 4 行：
+   ```json
+   "version": "0.0.0"
+   ```
+
+### 版本號規則（語義化版本 Semantic Versioning）
+
+| 類型 | 範例 | 情境 |
+|---|---|---|
+| PATCH（x.x.**+1**）| 0.1.0 → 0.1.1 | Bug 修正、樣式微調 |
+| MINOR（x.**+1**.0）| 0.1.0 → 0.2.0 | 新增功能、新頁面 |
+| MAJOR（**+1**.0.0）| 0.1.0 → 1.0.0 | 架構重大變更（保留） |
+
+> **AI 修改程式後必須主動更新兩處版本號並在 commit 中說明。**
+
+---
+
+## 注意事項
+
+1. **圖片刪除**：`handleDeleteImage`（App.tsx）同時刪除 Storage 檔案與 `characterImages` 記錄，Storage 掃描清單（`storageImages`）在 App.tsx 頂層管理
+2. **關係圖效能**：`RelationshipGraph` 使用 `React.memo + graphPropsAreEqual` 防抖，只在 name/image/tagIds/avatarPosition 改變時重繪
+3. **中文路徑**：Shell 指令使用 `working_directory` 包含中文時會亂碼，改用 `git -C "路徑"` 或將腳本放至無中文路徑執行
+4. **Supabase 腳本**：放在 `角色管理/` 以外的腳本找不到 `node_modules`，須用原生 `fetch` 而非 `@supabase/supabase-js`
