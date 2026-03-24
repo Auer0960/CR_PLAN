@@ -263,6 +263,11 @@ const ImageListView: React.FC<ImageListViewProps> = ({ characters, characterImag
                                         alt={character?.name || '未知角色'}
                                         className="w-full h-full object-cover object-top"
                                         loading="lazy"
+                                        onError={(e) => {
+                                            const el = e.currentTarget;
+                                            const fallback = resolveImagePath(image.imageUrl);
+                                            if (el.src !== fallback) el.src = fallback;
+                                        }}
                                     />
                                     <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                                         <p className="text-white text-sm font-bold truncate">
