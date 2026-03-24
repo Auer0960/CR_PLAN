@@ -75,15 +75,14 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, im
     if (!image) return;
     if (confirmingDelete) {
         onDeleteImage(image.id);
+        onClose(); // 刪除後立刻關閉 modal
     } else {
         setConfirmingDelete(true);
-        setTimeout(() => setConfirmingDelete(false), 3000); // Reset after 3 seconds
+        setTimeout(() => setConfirmingDelete(false), 3000);
     }
   };
 
-  if (!isOpen || !image) return null;
-
-  const characterName = character?.name || '未知角色';
+  if (!isOpen || !image || !character) return null;
 
   return (
     <>
@@ -94,11 +93,11 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ isOpen, onClose, im
           </button>
           
           <div className="w-full md:w-2/3 flex-shrink-0 bg-black flex items-center justify-center">
-            <img src={resolveImagePath(image.imageDataUrl)} alt={`Image of ${characterName}`} className="max-w-full max-h-[90vh] object-contain" />
+            <img src={resolveImagePath(image.imageDataUrl)} alt={`Image of ${character.name}`} className="max-w-full max-h-[90vh] object-contain" />
           </div>
 
           <div className="w-full md:w-1/3 p-6 flex flex-col overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-2 text-indigo-400">{characterName}</h2>
+            <h2 className="text-2xl font-bold mb-2 text-indigo-400">{character.name}</h2>
             <p className="text-sm text-gray-400 mb-6">圖片詳細資料</p>
 
             <div className="mb-6">
