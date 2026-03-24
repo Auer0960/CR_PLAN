@@ -176,6 +176,51 @@ export async function uploadAvatarFromBase64(
 }
 
 // ─────────────────────────────────────────────
+// Storage Image Listing（直接掃描 Storage bucket）
+// ─────────────────────────────────────────────
+
+export interface StorageImageItem {
+  id: string;           // 唯一識別（檔名）
+  storagePath: string;  // bucket 內路徑
+  imageUrl: string;     // 公開 URL
+  thumbnailUrl: string; // 縮圖公開 URL（可能不存在）
+  charIdPrefix: string; // 從檔名提取的角色 ID 前綴（用來反查）
+}
+
+/** 掃描 character-images bucket 根目錄的所有圖片檔（排除資料夾） */
+export async function listStorageImages(): Promise<StorageImageItem[]> {
+  const { data, error } = await supabase.storage
+    .from('character-images')
+    .list('', { limit: 1000, sortBy: { column: 'created_at', order: 'desc' } });
+
+  if (error || !data) return [];
+
+  // 只取真實檔案（有 id），排除子資料夾（thumbnails/, avatars/）
+  const files = data.filter(f => f.id && f.name && !f.name.endsWith('/'));
+
+  return files.map(file => {
+    const { data: urlData } = supabase.storage
+      .from('character-images')
+      .getPublicUrl(file.name);
+
+    const { data: thumbData } = supabase.storage
+      .from('character-images')
+      .getPublicUrl(`thumbnails/${file.name}`);
+
+    // 從檔名提取角色 ID 前綴（格式: charId_uuid.ext）
+    const charIdPrefix = file.name.split('_')[0] || '';
+
+    return {
+      id: file.name,
+      storagePath: file.name,
+      imageUrl: urlData.publicUrl,
+      thumbnailUrl: thumbData.publicUrl,
+      charIdPrefix,
+    };
+  });
+}
+
+// ─────────────────────────────────────────────
 // Users (使用者代碼登入)
 // ─────────────────────────────────────────────
 
