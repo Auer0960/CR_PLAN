@@ -1195,12 +1195,25 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {currentCharacterImages.map(img => (
+                  {currentCharacterImages.map(img => {
+                    const thumbSrc = resolveImagePath(img.thumbnailUrl);
+                    const mainSrc  = resolveImagePath(img.imageDataUrl);
+                    return (
                     <div key={img.id} className="relative group aspect-square">
                       <img
-                        src={resolveImagePath(img.thumbnailUrl) || resolveImagePath(img.imageDataUrl)}
+                        src={thumbSrc || mainSrc}
                         alt="Character"
-                        className="w-full h-full object-cover rounded-md"
+                        className="w-full h-full object-cover rounded-md bg-gray-700"
+                        onError={(e) => {
+                          const el = e.currentTarget;
+                          // 縮圖失敗 → 換原圖
+                          if (el.src !== mainSrc && mainSrc) {
+                            el.src = mainSrc;
+                          } else {
+                            // 原圖也失敗 → 顯示佔位符（隱藏 img，由父元素背景代替）
+                            el.style.display = 'none';
+                          }
+                        }}
                       />
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center text-white">
                         <button onClick={() => handleSetAsAvatar(img.imageDataUrl)} className="text-xs bg-indigo-600 px-2 py-1 rounded mb-1 hover:bg-indigo-700">設為頭像</button>
@@ -1209,7 +1222,8 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                       </div>
                       {editedCharacter.image === img.imageDataUrl && <div className="absolute top-1 right-1 bg-indigo-600 text-white text-xs px-1.5 py-0.5 rounded-full">頭像</div>}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {currentCharacterImages.length === 0 && <p className="text-sm text-gray-500 text-center">此角色尚無圖片。</p>}
               </div>
