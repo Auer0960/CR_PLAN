@@ -797,8 +797,9 @@ const App: React.FC = () => {
                 // 標記為錯誤狀態：資料來自 fallback，禁止自動儲存以防覆蓋 Supabase 真實資料
                 isDataFromErrorRef.current = true;
             } finally {
-                // Mark data as ready so save effects can proceed
-                isDataReadyRef.current = true;
+                // 用 setTimeout(0) 讓旗標在 React 處理完所有狀態更新、執行完 Effect 之後才設為 true。
+                // 這樣能避免「剛從 Supabase 讀進來的資料」立刻觸發自動儲存（存回完全相同的資料）。
+                setTimeout(() => { isDataReadyRef.current = true; }, 0);
             }
         };
 
@@ -867,11 +868,22 @@ const App: React.FC = () => {
         return () => { supabase.removeChannel(channel); };
     }, [isDataReadyRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // 使用者是否已實際修改過資料（登入或初始載入不算，只有真正改資料才設為 true）
+    const hasUserEditedRef = React.useRef(false);
+
+    // 監聽資料變化：isDataReadyRef 為 true 之後才開始記錄「使用者有修改」
+    useEffect(() => {
+        if (!isDataReadyRef.current) return;
+        if (isDataFromErrorRef.current) return;
+        hasUserEditedRef.current = true;
+    }, [characters, relationships, tagCategories, characterImages, glossaryTerms, deletedRelationshipIds, deletedImageIds]); // eslint-disable-line react-hooks/exhaustive-deps
+
     // Save data to Supabase (single source, works in both local dev and production)
     useEffect(() => {
         if (!isDataReadyRef.current) return; // 資料尚未載入完成，不儲存
         if (isDataFromErrorRef.current) return; // 載入失敗（使用暫代資料），禁止儲存以防覆蓋真實資料
         if (!currentUser) return; // 未登入不儲存
+        if (!hasUserEditedRef.current) return; // 使用者尚未實際修改資料，不儲存（避免登入/載入觸發多餘儲存）
 
         const saveData = async () => {
             try {
