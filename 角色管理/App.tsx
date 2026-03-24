@@ -1032,7 +1032,7 @@ const App: React.FC = () => {
         }
     };
 
-    const handleCharacterClick = (character: Character) => {
+    const handleCharacterClick = useCallback((character: Character) => {
         const charRels = relationships.filter(r => r.source === character.id || r.target === character.id);
         editorOpenSnapshotRef.current = {
             character: JSON.parse(JSON.stringify(character)),
@@ -1040,7 +1040,7 @@ const App: React.FC = () => {
         };
         setSelectedCharacter(character);
         setIsCharacterEditorOpen(true);
-    };
+    }, [relationships]);
 
     const handleEditorClose = (_note?: string) => {
         if (currentUser && selectedCharacter && editorOpenSnapshotRef.current) {

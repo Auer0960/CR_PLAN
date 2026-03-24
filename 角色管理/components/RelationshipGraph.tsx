@@ -639,4 +639,30 @@ const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ characters, relat
     );
 };
 
-export default RelationshipGraph;
+// 只有「真正影響圖形」的資料改變才重新渲染：
+// - characters 的 id / name / tagIds / image / avatarPosition
+// - relationships 全部欄位
+// - tagCategories
+// 不影響圖形的 notes、profileFields 等欄位變化不觸發 D3 重算
+function graphPropsAreEqual(
+    prev: RelationshipGraphProps,
+    next: RelationshipGraphProps
+): boolean {
+    if (prev.onNodeClick !== next.onNodeClick) return false;
+    if (prev.tagCategories !== next.tagCategories) return false;
+    if (prev.relationships !== next.relationships) return false;
+    if (prev.characters.length !== next.characters.length) return false;
+    return prev.characters.every((c, i) => {
+        const n = next.characters[i];
+        return (
+            n &&
+            c.id === n.id &&
+            c.name === n.name &&
+            c.image === n.image &&
+            JSON.stringify(c.tagIds) === JSON.stringify(n.tagIds) &&
+            JSON.stringify(c.avatarPosition) === JSON.stringify(n.avatarPosition)
+        );
+    });
+}
+
+export default React.memo(RelationshipGraph, graphPropsAreEqual);
