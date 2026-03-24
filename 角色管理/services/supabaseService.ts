@@ -258,6 +258,49 @@ export async function listStorageImages(): Promise<StorageImageItem[]> {
 }
 
 // ─────────────────────────────────────────────
+// Activity Log（管理員操作紀錄）
+// ─────────────────────────────────────────────
+
+export interface ActivityLogEntry {
+  id: string;
+  user_code: string;
+  user_name: string;
+  action: string;
+  detail: string | null;
+  created_at: string;
+}
+
+/** 寫入一筆活動紀錄 */
+export async function logActivity(
+  userCode: string,
+  userName: string,
+  action: string,
+  detail?: string
+): Promise<void> {
+  const { error } = await supabase.from('activity_log').insert({
+    user_code: userCode,
+    user_name: userName,
+    action,
+    detail: detail ?? null,
+  });
+  if (error) console.warn('[ActivityLog] 寫入失敗:', error.message);
+}
+
+/** 讀取最近 N 筆活動紀錄（依時間降序） */
+export async function loadActivityLog(limit = 100): Promise<ActivityLogEntry[]> {
+  const { data, error } = await supabase
+    .from('activity_log')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.error('[ActivityLog] 讀取失敗:', error.message);
+    return [];
+  }
+  return (data as ActivityLogEntry[]) ?? [];
+}
+
+// ─────────────────────────────────────────────
 // Users (使用者代碼登入)
 // ─────────────────────────────────────────────
 

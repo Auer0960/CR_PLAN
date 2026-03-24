@@ -123,7 +123,7 @@ export interface AiTagSuggestion {
 
 export type AiProvider = 'gemini' | 'openai';
 
-export type View = 'graph' | 'characters' | 'images' | 'search' | 'tags' | 'settings' | 'analytics' | 'timeline' | 'glossary';
+export type View = 'graph' | 'characters' | 'images' | 'search' | 'tags' | 'settings' | 'analytics' | 'timeline' | 'glossary' | 'activityLog';
 
 export interface AppData {
   characters: Character[];

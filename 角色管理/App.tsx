@@ -7,7 +7,7 @@ import type { AppData, Character, Relationship, TagCategory, CharacterImage, AiP
 // Import services
 import { parseWithGemini } from './services/geminiService';
 import { parseWithOpenAI } from './services/openaiService';
-import { loadAppData, saveAppData, loadTimelineData, saveTimelineData, getUserByCode, deleteStorageImages, extractStoragePath, type StorageImageItem, type DeleteStorageResult } from './services/supabaseService';
+import { loadAppData, saveAppData, loadTimelineData, saveTimelineData, getUserByCode, deleteStorageImages, extractStoragePath, logActivity, type StorageImageItem, type DeleteStorageResult } from './services/supabaseService';
 import { supabase } from './supabase';
 
 // Import components
@@ -26,6 +26,7 @@ import TagAnalyticsView from './components/TagAnalyticsView';
 import ErrorBoundary from './components/ErrorBoundary';
 import TimelineView from './components/TimelineView';
 import GlossaryView from './components/GlossaryView';
+import ActivityLogView from './components/ActivityLogView';
 
 // A helper for generating default data
 function generateDefaultData(): AppData {
@@ -174,6 +175,8 @@ const App: React.FC = () => {
     // Realtime sync toast
     const [realtimeToast, setRealtimeToast] = useState<string | null>(null);
     const isSavingRef = React.useRef(false); // 自己儲存時不重新載入
+    const lastSaveTsRef = React.useRef<number>(0); // 上次存檔的時間戳，用來濾掉延遲到的 Realtime 通知
+    const isRealtimeUpdateRef = React.useRef(false); // Realtime 更新時設為 true，避免觸發 hasUserEditedRef
     // Prevents save effects from firing before the initial data load completes
     const isDataReadyRef = React.useRef(false);
     // Set to true when data loading failed and fell back to placeholder — blocks auto-save
@@ -854,11 +857,14 @@ const App: React.FC = () => {
                 table: 'app_data',
                 filter: 'key=eq.main',
             }, async () => {
-                // 自己儲存觸發的通知，略過
+                // 自己儲存觸發的通知，略過（包含 Realtime 延遲抵達的情況）
                 if (isSavingRef.current) return;
+                if (Date.now() - lastSaveTsRef.current < 30000) return; // 30 秒內的通知視為自己的存檔，略過
                 // 正在編輯角色時不打斷，只在背景靜默更新
                 const fresh = await loadAppData();
                 if (!fresh) return;
+                // 標記為 Realtime 更新，避免觸發 hasUserEditedRef → 再次存檔的惡性循環
+                isRealtimeUpdateRef.current = true;
                 setCharacters(fresh.characters || []);
                 setRelationships(fresh.relationships || []);
                 setCharacterImages(fresh.characterImages || []);
@@ -885,6 +891,11 @@ const App: React.FC = () => {
     useEffect(() => {
         if (!isDataReadyRef.current) return;
         if (isDataFromErrorRef.current) return;
+        // Realtime 更新觸發的 state 變化不算「使用者修改」，直接略過並重置旗標
+        if (isRealtimeUpdateRef.current) {
+            isRealtimeUpdateRef.current = false;
+            return;
+        }
         hasUserEditedRef.current = true;
     }, [characters, relationships, tagCategories, characterImages, glossaryTerms, deletedRelationshipIds, deletedImageIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -898,6 +909,7 @@ const App: React.FC = () => {
         const saveData = async () => {
             try {
                 isSavingRef.current = true;
+                lastSaveTsRef.current = Date.now(); // 記錄存檔時間，用來濾掉延遲的 Realtime 通知
                 setSaveStatus('saving');
                 setSaveError(null);
 
@@ -914,8 +926,17 @@ const App: React.FC = () => {
                 await saveAppData(appData);
                 setSaveStatus('saved');
                 setLastSavedAt(Date.now());
+                // 寫活動紀錄（不阻塞 UI）
+                if (currentUser) {
+                    const changedCount = modifiedCharacterIdsRef.current.size;
+                    const detail = changedCount > 0
+                        ? `更新 ${changedCount} 個角色資料`
+                        : '儲存設定/關係圖等資料';
+                    logActivity(currentUser.code, currentUser.name, '儲存資料', detail).catch(() => {});
+                    modifiedCharacterIdsRef.current.clear();
+                }
                 // 延遲解鎖，讓 Realtime 通知先到再略過
-                setTimeout(() => { isSavingRef.current = false; }, 2000);
+                setTimeout(() => { isSavingRef.current = false; }, 5000);
 
             } catch (e: any) {
                 console.error("Failed to save data", e);
@@ -1181,6 +1202,7 @@ const App: React.FC = () => {
     };
 
     const handleSaveCharacter = (updatedCharacter: Character) => {
+        modifiedCharacterIdsRef.current.add(updatedCharacter.id);
         setCharacters(prev => prev.map(c => c.id === updatedCharacter.id ? updatedCharacter : c));
     };
 
@@ -1292,10 +1314,13 @@ const App: React.FC = () => {
 
             if (result.error) {
                 showToast(`圖片記錄已移除，但 Storage 刪除失敗：${result.error}`, 'error', 6000);
+                if (currentUser) logActivity(currentUser.code, currentUser.name, '刪除圖片（失敗）', `路徑：${pathsToDelete[0]}`).catch(() => {});
             } else if (result.deleted === 0) {
                 showToast('圖片記錄已移除，但 Storage 實體未刪除（可能需要在 Supabase 開放 DELETE 權限）', 'warn', 6000);
+                if (currentUser) logActivity(currentUser.code, currentUser.name, '刪除圖片（RLS 擋）', `路徑：${pathsToDelete[0]}`).catch(() => {});
             } else {
                 showToast('圖片刪除成功', 'success');
+                if (currentUser) logActivity(currentUser.code, currentUser.name, '刪除圖片', `路徑：${pathsToDelete[0]}`).catch(() => {});
             }
         } else {
             showToast('圖片記錄已移除（無 Storage 路徑可刪）', 'warn');
@@ -1403,6 +1428,8 @@ const App: React.FC = () => {
                     onCharacterClick={handleCharacterClick}
                     currentUser={currentUser}
                 />;
+            case 'activityLog':
+                return <ActivityLogView />;
             case 'settings':
                 return <SettingsView
                     onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
@@ -1442,7 +1469,7 @@ const App: React.FC = () => {
 
     return (
         <div className="flex h-screen w-screen bg-gray-900 text-white font-sans">
-            <Sidebar activeView={activeView} onSetActiveView={setActiveView} />
+            <Sidebar activeView={activeView} onSetActiveView={setActiveView} currentUser={currentUser} />
             <main className="flex-1 overflow-hidden">
                 <ErrorBoundary>
                     {renderView()}

@@ -1,10 +1,14 @@
 import React from 'react';
 import type { View } from '../types';
-import { GraphIcon, UsersIcon, SearchIcon, TagsIcon, SettingsIcon, ImageIcon, AnalyticsIcon, TimelineIcon, BookIcon } from './Icons';
+import type { AppUser } from '../types';
+import { GraphIcon, UsersIcon, SearchIcon, TagsIcon, SettingsIcon, ImageIcon, AnalyticsIcon, TimelineIcon, BookIcon, ActivityLogIcon } from './Icons';
+
+const ADMIN_CODE = '01069';
 
 interface SidebarProps {
   activeView: View;
   onSetActiveView: (view: View) => void;
+  currentUser: AppUser | null;
 }
 
 const NavItem: React.FC<{
@@ -29,7 +33,8 @@ const NavItem: React.FC<{
   );
 };
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, onSetActiveView }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeView, onSetActiveView, currentUser }) => {
+  const isAdmin = currentUser?.code === ADMIN_CODE;
   return (
     <nav className="bg-gray-800 p-2 flex flex-col items-center space-y-4 border-r border-gray-700">
       <NavItem label="關係圖" viewName="graph" activeView={activeView} onClick={onSetActiveView}>
@@ -57,6 +62,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onSetActiveView }) => {
         <BookIcon className="w-6 h-6" />
       </NavItem>
       <div className="flex-grow" />
+      {isAdmin && (
+        <NavItem label="操作紀錄（管理員）" viewName="activityLog" activeView={activeView} onClick={onSetActiveView}>
+          <ActivityLogIcon className="w-6 h-6" />
+        </NavItem>
+      )}
       <NavItem label="設定" viewName="settings" activeView={activeView} onClick={onSetActiveView}>
         <SettingsIcon className="w-6 h-6" />
       </NavItem>
