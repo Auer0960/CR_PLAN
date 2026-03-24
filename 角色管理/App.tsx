@@ -7,7 +7,7 @@ import type { AppData, Character, Relationship, TagCategory, CharacterImage, AiP
 // Import services
 import { parseWithGemini } from './services/geminiService';
 import { parseWithOpenAI } from './services/openaiService';
-import { loadAppData, saveAppData, loadTimelineData, saveTimelineData, getUserByCode, deleteStorageImages, extractStoragePath } from './services/supabaseService';
+import { loadAppData, saveAppData, loadTimelineData, saveTimelineData, getUserByCode, deleteStorageImages, extractStoragePath, type StorageImageItem } from './services/supabaseService';
 import { supabase } from './supabase';
 
 // Import components
@@ -146,6 +146,7 @@ const App: React.FC = () => {
     const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<CharacterImage | null>(null);
     const [isImageDetailModalOpen, setIsImageDetailModalOpen] = useState(false);
+    const [storageImages, setStorageImages] = useState<StorageImageItem[] | null>(null);
 
     // Settings state
     const [aiProvider, setAiProvider] = useState<AiProvider>('gemini');
@@ -1258,6 +1259,8 @@ const App: React.FC = () => {
             // ── Storage 模式：imageId 本身就是檔名，直接刪 Storage ──
             pathsToDelete.push(imageId);
             pathsToDelete.push(`thumbnails/${imageId}`);
+            // Storage 模式：從掃描清單移除已刪圖片，不需重新掃描
+            setStorageImages(prev => prev ? prev.filter(si => si.id !== imageId) : null);
         }
 
         // 非同步刪除 Storage 檔案（失敗不阻塞 UI）
@@ -1347,7 +1350,7 @@ const App: React.FC = () => {
             case 'characters':
                 return <CharacterListView characters={characters} onCharacterClick={handleCharacterClick} allTags={allTags} onProcess={handleProcessText} isLoading={isLoading} error={error} onAddNewCharacter={handleAddNewCharacter} tagCategories={tagCategories} />;
             case 'images':
-                return <ImageListView characters={characters} characterImages={characterImages} allTags={allTags} tagCategories={tagCategories} onCharacterClick={handleCharacterClick} onImageClick={handleImageClick} />;
+                return <ImageListView characters={characters} characterImages={characterImages} allTags={allTags} tagCategories={tagCategories} onCharacterClick={handleCharacterClick} onImageClick={handleImageClick} storageImages={storageImages} onSetStorageImages={setStorageImages} />;
             case 'search':
                 return <SearchView characters={characters} allTags={allTags} tagCategories={tagCategories} onCharacterClick={handleCharacterClick} />;
             case 'tags':

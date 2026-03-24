@@ -23,6 +23,8 @@ interface ImageListViewProps {
     tagCategories: TagCategory[];
     onCharacterClick: (character: Character) => void;
     onImageClick: (image: CharacterImage) => void;
+    storageImages: StorageImageItem[] | null;
+    onSetStorageImages: React.Dispatch<React.SetStateAction<StorageImageItem[] | null>>;
 }
 
 // 統一顯示用的圖片型別（來源可以是 characterImages 或 Storage）
@@ -38,11 +40,10 @@ interface DisplayImage {
     original?: CharacterImage;
 }
 
-const ImageListView: React.FC<ImageListViewProps> = ({ characters, characterImages, allTags, tagCategories, onImageClick }) => {
+const ImageListView: React.FC<ImageListViewProps> = ({ characters, characterImages, allTags, tagCategories, onImageClick, storageImages, onSetStorageImages: setStorageImages }) => {
     const [selectedCharacterId, setSelectedCharacterId] = useState<string>('all');
     const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
     const [isTagFilterOpen, setIsTagFilterOpen] = useState(false);
-    const [storageImages, setStorageImages] = useState<StorageImageItem[] | null>(null);
     const [isLoadingStorage, setIsLoadingStorage] = useState(false);
     const [storageError, setStorageError] = useState<string | null>(null);
 
