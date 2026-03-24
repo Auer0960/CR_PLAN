@@ -166,6 +166,8 @@ const App: React.FC = () => {
     const isSavingRef = React.useRef(false); // 自己儲存時不重新載入
     // Prevents save effects from firing before the initial data load completes
     const isDataReadyRef = React.useRef(false);
+    // Set to true when data loading failed and fell back to placeholder — blocks auto-save
+    const isDataFromErrorRef = React.useRef(false);
     // Snapshot of the character+relationships taken when the editor opens, used for diff on close
     const editorOpenSnapshotRef = React.useRef<{
         character: Character;
@@ -792,6 +794,8 @@ const App: React.FC = () => {
                 setRelationships(defaultData.relationships);
                 setTagCategories(defaultData.tagCategories);
                 setCharacterImages(defaultData.characterImages);
+                // 標記為錯誤狀態：資料來自 fallback，禁止自動儲存以防覆蓋 Supabase 真實資料
+                isDataFromErrorRef.current = true;
             } finally {
                 // Mark data as ready so save effects can proceed
                 isDataReadyRef.current = true;
@@ -866,6 +870,7 @@ const App: React.FC = () => {
     // Save data to Supabase (single source, works in both local dev and production)
     useEffect(() => {
         if (!isDataReadyRef.current) return; // 資料尚未載入完成，不儲存
+        if (isDataFromErrorRef.current) return; // 載入失敗（使用暫代資料），禁止儲存以防覆蓋真實資料
         if (!currentUser) return; // 未登入不儲存
 
         const saveData = async () => {
@@ -906,6 +911,7 @@ const App: React.FC = () => {
     // Save timeline data to Supabase
     useEffect(() => {
         if (!isDataReadyRef.current) return; // 資料尚未載入完成，不儲存
+        if (isDataFromErrorRef.current) return; // 載入失敗，禁止儲存
 
         const saveTimeline = async () => {
             try {
@@ -1404,13 +1410,14 @@ const App: React.FC = () => {
                     {currentUser?.name || '—'}
                 </div>
                 <div className="rounded-md border border-gray-700 bg-gray-950/80 px-3 py-2 text-xs text-gray-200 backdrop-blur">
-                    {saveStatus === 'saving' && <div>儲存中…</div>}
-                    {saveStatus === 'saved' && (
+                    {isDataFromErrorRef.current && <div className="text-red-400 font-bold">⚠️ 資料載入失敗（顯示暫代資料），儲存已停用，請重新整理</div>}
+                    {!isDataFromErrorRef.current && saveStatus === 'saving' && <div>儲存中…</div>}
+                    {!isDataFromErrorRef.current && saveStatus === 'saved' && (
                         <div>已儲存{lastSavedAt ? `（${new Date(lastSavedAt).toLocaleTimeString()}）` : ''}</div>
                     )}
-                    {saveStatus === 'readonly' && <div>雲端模式：唯讀</div>}
-                    {saveStatus === 'error' && <div className="text-red-300">儲存失敗：{saveError || '未知錯誤'}</div>}
-                    {saveStatus === 'idle' && <div className="text-gray-400">未變更</div>}
+                    {!isDataFromErrorRef.current && saveStatus === 'readonly' && <div>雲端模式：唯讀</div>}
+                    {!isDataFromErrorRef.current && saveStatus === 'error' && <div className="text-red-300">儲存失敗：{saveError || '未知錯誤'}</div>}
+                    {!isDataFromErrorRef.current && saveStatus === 'idle' && <div className="text-gray-400">未變更</div>}
                 </div>
             </div>
 
