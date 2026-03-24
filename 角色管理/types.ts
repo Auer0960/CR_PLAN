@@ -36,6 +36,7 @@ export interface Character {
   name: string;
   characterCode?: string; // 角色編號，如 cr031，全局唯一
   birthday?: string;      // 生日，格式 MM/DD，如 04/15
+  age?: string;           // 實際年齡，如 25歲
   title?: string;         // 稱號
   height?: string;        // 身高，如 175cm
   weight?: string;        // 體重，如 65kg
