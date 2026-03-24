@@ -8,9 +8,9 @@ export type DiffLine = { type: 'removed' | 'added'; text: string };
  * 使用 LCS 找出 before/after 的差異，只回傳 removed 和 added 行。
  * 若 before 或 after 為空，則全部視為 added 或 removed。
  */
-export function computeLineDiff(before: string, after: string): DiffLine[] {
-  const bLines = before.split('\n');
-  const aLines = after.split('\n');
+export function computeLineDiff(before: string | undefined | null, after: string | undefined | null): DiffLine[] {
+  const bLines = (before ?? '').split('\n');
+  const aLines = (after ?? '').split('\n');
 
   if (bLines.length === 0 && aLines.length === 0) return [];
   if (bLines.length === 0) {
