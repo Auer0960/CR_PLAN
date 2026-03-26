@@ -267,7 +267,12 @@ const ImageListView: React.FC<ImageListViewProps> = ({ characters, characterImag
                                         onError={(e) => {
                                             const el = e.currentTarget;
                                             const fallback = resolveImagePath(image.imageUrl);
-                                            if (el.src !== fallback) el.src = fallback;
+                                            if (el.src !== fallback && fallback) {
+                                                el.src = fallback;
+                                            } else {
+                                                // 兩個 URL 都失敗：隱藏破圖，讓父容器背景色作為佔位
+                                                el.style.display = 'none';
+                                            }
                                         }}
                                     />
                                     <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
