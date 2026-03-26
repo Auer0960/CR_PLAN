@@ -1522,6 +1522,8 @@ const App: React.FC = () => {
                     onUpdateCharacterImages={setCharacterImages}
                     onAddTagToCategory={handleAddTagToCategory}
                     currentUser={currentUser}
+                    saveStatus={saveStatus}
+                    lastSavedAt={lastSavedAt}
                 />
             )}
 

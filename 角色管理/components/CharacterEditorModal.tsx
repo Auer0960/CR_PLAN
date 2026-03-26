@@ -123,6 +123,8 @@ interface CharacterEditorModalProps {
   onUpdateCharacterImages: (updater: React.SetStateAction<CharacterImage[]>) => void;
   onAddTagToCategory: (label: string, categoryName: string) => Tag | null;
   currentUser?: AppUser | null;
+  saveStatus?: 'idle' | 'saving' | 'saved' | 'readonly' | 'error';
+  lastSavedAt?: number | null;
 }
 
 type EditorTab = 'details' | 'relationships' | 'profile' | 'images' | 'changelog';
@@ -223,6 +225,8 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
   onUpdateCharacterImages,
   onAddTagToCategory,
   currentUser,
+  saveStatus,
+  lastSavedAt,
 }) => {
   const [editedCharacter, setEditedCharacter] = useState<Character>(character);
   const [activeTab, setActiveTab] = useState<EditorTab>('details');
@@ -231,6 +235,12 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
   const [editingNoteText, setEditingNoteText] = useState('');
 
   const isAdmin = currentUser?.code === '01069';
+
+  // Close 時先確保最新的 editedCharacter 有存進去，再呼叫 onClose
+  const handleClose = () => {
+    onSave(editedCharacter);
+    onClose();
+  };
 
   // Save a note edit for a specific log entry (display index = reversed)
   const handleSaveNoteForEntry = (displayIndex: number) => {
@@ -661,7 +671,7 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-40" onClick={() => onClose()}>
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-40" onClick={handleClose}>
         <div
           className="bg-gray-800 text-white rounded-lg shadow-xl w-full max-w-4xl h-[80vh] flex overflow-hidden"
           onClick={e => e.stopPropagation()}
@@ -725,6 +735,26 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
             </nav>
 
             <div className="flex-grow"></div>
+
+            {/* 儲存狀態 */}
+            <div className="mb-2 px-1 flex items-center gap-1.5 text-xs">
+              {saveStatus === 'saving' && (
+                <><span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse inline-block" />
+                <span className="text-yellow-300">儲存中…</span></>
+              )}
+              {saveStatus === 'saved' && (
+                <><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                <span className="text-green-400">已儲存{lastSavedAt ? `  ${new Date(lastSavedAt).toLocaleTimeString()}` : ''}</span></>
+              )}
+              {saveStatus === 'error' && (
+                <><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
+                <span className="text-red-400">儲存失敗</span></>
+              )}
+              {(saveStatus === 'idle' || !saveStatus) && (
+                <span className="text-gray-600">自動儲存</span>
+              )}
+            </div>
+
             <button
               onClick={handleDelete}
               className={`w-full flex items-center justify-center gap-3 px-3 py-2 rounded-md text-left transition-colors duration-200 ${confirmingDelete
@@ -738,7 +768,7 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col p-6 overflow-y-auto">
-            <button onClick={() => onClose()} className="absolute top-4 right-4 text-gray-400 hover:text-white z-10">
+            <button onClick={handleClose} className="absolute top-4 right-4 text-gray-400 hover:text-white z-10">
               <CloseIcon className="w-6 h-6" />
             </button>
 
