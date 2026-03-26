@@ -192,6 +192,10 @@ const App: React.FC = () => {
     const charactersRef = React.useRef(characters);
     React.useEffect(() => { charactersRef.current = characters; }, [characters]);
 
+    // Always-fresh ref for deletedImageIds, used in Realtime handler to filter restored images
+    const deletedImageIdsRef = React.useRef(deletedImageIds);
+    React.useEffect(() => { deletedImageIdsRef.current = deletedImageIds; }, [deletedImageIds]);
+
     // Track editor open state via ref so Realtime handler (a stale closure) can read it
     const isCharacterEditorOpenRef = React.useRef(false);
     React.useEffect(() => { isCharacterEditorOpenRef.current = isCharacterEditorOpen; }, [isCharacterEditorOpen]);
@@ -879,8 +883,12 @@ const App: React.FC = () => {
                 if (!isCharacterEditorOpenRef.current) {
                     setCharacters(fresh.characters || []);
                 }
+                // 過濾已刪除的圖片，防止 Realtime reload 把剛刪除的圖帶回來
+                const freshImages = (fresh.characterImages || []).filter(
+                    (img: { id: string }) => !deletedImageIdsRef.current.has(img.id)
+                );
                 setRelationships(fresh.relationships || []);
-                setCharacterImages(fresh.characterImages || []);
+                setCharacterImages(freshImages);
                 const cats = (fresh.tagCategories || []).map((cat: any) => ({
                     ...cat,
                     tags: cat.tags.map((tag: any) => ({ ...tag, color: cat.color })),
@@ -1416,8 +1424,10 @@ const App: React.FC = () => {
                 return <RelationshipGraph characters={characters} relationships={relationships} onNodeClick={handleCharacterClick} tagCategories={tagCategories} />;
             case 'characters':
                 return <CharacterListView characters={characters} onCharacterClick={handleCharacterClick} allTags={allTags} onProcess={handleProcessText} isLoading={isLoading} error={error} onAddNewCharacter={handleAddNewCharacter} tagCategories={tagCategories} />;
-            case 'images':
-                return <ImageListView characters={characters} characterImages={characterImages} allTags={allTags} tagCategories={tagCategories} onCharacterClick={handleCharacterClick} onImageClick={handleImageClick} storageImages={storageImages} onSetStorageImages={setStorageImages} />;
+            case 'images': {
+                const visibleImages = characterImages.filter(img => !deletedImageIds.has(img.id));
+                return <ImageListView characters={characters} characterImages={visibleImages} allTags={allTags} tagCategories={tagCategories} onCharacterClick={handleCharacterClick} onImageClick={handleImageClick} storageImages={storageImages} onSetStorageImages={setStorageImages} />;
+            }
             case 'search':
                 return <SearchView characters={characters} allTags={allTags} tagCategories={tagCategories} onCharacterClick={handleCharacterClick} />;
             case 'tags':
