@@ -188,6 +188,14 @@ const App: React.FC = () => {
         relationships: Relationship[];
     } | null>(null);
 
+    // Always-fresh ref for characters, used in handleCharacterClick to avoid stale closure
+    const charactersRef = React.useRef(characters);
+    React.useEffect(() => { charactersRef.current = characters; }, [characters]);
+
+    // Track editor open state via ref so Realtime handler (a stale closure) can read it
+    const isCharacterEditorOpenRef = React.useRef(false);
+    React.useEffect(() => { isCharacterEditorOpenRef.current = isCharacterEditorOpen; }, [isCharacterEditorOpen]);
+
     // Helper: get profileFields from a character (migrates old profile format)
     const getProfileFieldsFromChar = (char: Character): ProfileField[] => {
         if (char.profileFields && char.profileFields.length > 0) return char.profileFields;
@@ -863,12 +871,14 @@ const App: React.FC = () => {
                 if (incomingSessionId && incomingSessionId === clientSessionIdRef.current) return;
                 // 補漏：session ID 比對失敗（舊資料或欄位尚未加）時，用短暫 flag 兜底
                 if (!incomingSessionId && isSavingRef.current) return;
-                // 正在編輯角色時不打斷，只在背景靜默更新
                 const fresh = await loadAppData();
                 if (!fresh) return;
                 // 標記為 Realtime 更新，避免觸發 hasUserEditedRef → 再次存檔的惡性循環
                 isRealtimeUpdateRef.current = true;
-                setCharacters(fresh.characters || []);
+                // 正在編輯角色時不覆蓋 characters，避免使用者未儲存的編輯被清除
+                if (!isCharacterEditorOpenRef.current) {
+                    setCharacters(fresh.characters || []);
+                }
                 setRelationships(fresh.relationships || []);
                 setCharacterImages(fresh.characterImages || []);
                 const cats = (fresh.tagCategories || []).map((cat: any) => ({
@@ -1066,12 +1076,14 @@ const App: React.FC = () => {
     };
 
     const handleCharacterClick = useCallback((character: Character) => {
-        const charRels = relationships.filter(r => r.source === character.id || r.target === character.id);
+        // Always use the freshest version from charactersRef to avoid stale closure
+        const freshChar = charactersRef.current.find(c => c.id === character.id) ?? character;
+        const charRels = relationships.filter(r => r.source === freshChar.id || r.target === freshChar.id);
         editorOpenSnapshotRef.current = {
-            character: JSON.parse(JSON.stringify(character)),
+            character: JSON.parse(JSON.stringify(freshChar)),
             relationships: JSON.parse(JSON.stringify(charRels)),
         };
-        setSelectedCharacter(character);
+        setSelectedCharacter(freshChar);
         setIsCharacterEditorOpen(true);
     }, [relationships]);
 
