@@ -192,10 +192,6 @@ const App: React.FC = () => {
     const charactersRef = React.useRef(characters);
     React.useEffect(() => { charactersRef.current = characters; }, [characters]);
 
-    // Always-fresh ref for deletedImageIds, used in Realtime handler to filter restored images
-    const deletedImageIdsRef = React.useRef(deletedImageIds);
-    React.useEffect(() => { deletedImageIdsRef.current = deletedImageIds; }, [deletedImageIds]);
-
     // Track editor open state via ref so Realtime handler (a stale closure) can read it
     const isCharacterEditorOpenRef = React.useRef(false);
     React.useEffect(() => { isCharacterEditorOpenRef.current = isCharacterEditorOpen; }, [isCharacterEditorOpen]);
@@ -216,6 +212,9 @@ const App: React.FC = () => {
     // Load data on mount
     const [deletedRelationshipIds, setDeletedRelationshipIds] = useState<Set<string>>(new Set());
     const [deletedImageIds, setDeletedImageIds] = useState<Set<string>>(new Set());
+    // Always-fresh ref for deletedImageIds, used in Realtime handler to filter restored images
+    const deletedImageIdsRef = React.useRef(deletedImageIds);
+    React.useEffect(() => { deletedImageIdsRef.current = deletedImageIds; }, [deletedImageIds]);
 
     // Canonical ID mapping to prevent duplicate "same-name different-id" characters from appearing.
     // These canonical IDs are the ones in cr_data.json.
