@@ -156,7 +156,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     return (
         <div className="h-full w-full bg-gray-900 flex flex-col p-8 overflow-y-auto">
             <h1 className="text-3xl font-bold text-white mb-8">設定</h1>
-            <div className="mb-4 text-xs text-gray-500 font-mono">Version 0.1.4</div>
+            <div className="mb-4 text-xs text-gray-500 font-mono">Version 0.1.5</div>
 
             <div className="space-y-8 max-w-2xl">
                 {/* AI Settings */}
