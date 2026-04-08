@@ -943,6 +943,7 @@ const App: React.FC = () => {
                 };
 
                 await saveAppData(appData, clientSessionIdRef.current);
+                hasUserEditedRef.current = false;
                 setSaveStatus('saved');
                 setLastSavedAt(Date.now());
                 // 寫活動紀錄（不阻塞 UI）
