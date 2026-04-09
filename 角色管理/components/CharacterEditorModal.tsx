@@ -236,9 +236,11 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
 
   const isAdmin = currentUser?.code === '01069';
 
-  // Close 時先確保最新的 editedCharacter 有存進去，再呼叫 onClose
+  // Close 時比對是否真的有修改，有才呼叫 onSave，避免單純開關 Modal 觸發 auto-save
   const handleClose = () => {
-    onSave(editedCharacter);
+    if (JSON.stringify(editedCharacter) !== JSON.stringify(character)) {
+      onSave(editedCharacter);
+    }
     onClose();
   };
 
