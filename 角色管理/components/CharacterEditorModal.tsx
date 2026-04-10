@@ -270,6 +270,7 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
   const [editingImageTagsFor, setEditingImageTagsFor] = useState<CharacterImage | null>(null);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [profileEditMode, setProfileEditMode] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // Derived profile fields — migrates old fixed-key profile to dynamic array on first access
   const profileFields = useMemo<ProfileField[]>(() => {
@@ -675,7 +676,8 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
     <>
       <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-40" onClick={handleClose}>
         <div
-          className="bg-gray-800 text-white rounded-lg shadow-xl w-full max-w-4xl h-[80vh] flex overflow-hidden"
+          className="bg-gray-800 text-white rounded-lg shadow-xl w-full max-w-4xl h-[80vh] flex overflow-hidden transition-all duration-300 data-[gallery=true]:max-w-6xl"
+          data-gallery={activeTab !== 'images' && currentCharacterImages.length > 0 ? 'true' : undefined}
           onClick={e => e.stopPropagation()}
         >
           {/* Sidebar */}
@@ -1400,8 +1402,99 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
               </div>
             )}
           </div>
+
+          {/* Right Panel — Character Gallery */}
+          {activeTab !== 'images' && currentCharacterImages.length > 0 && (
+            <div className="w-72 flex-shrink-0 border-l border-gray-700 flex flex-col bg-gray-900/40">
+              <div className="px-4 py-3 border-b border-gray-700 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-gray-400" />
+                <h4 className="text-sm font-semibold text-gray-300">角色立繪</h4>
+                <span className="ml-auto text-xs text-gray-500">{currentCharacterImages.length}</span>
+              </div>
+              <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                {currentCharacterImages.map((img, idx) => {
+                  const thumbSrc = resolveImagePath(img.thumbnailUrl);
+                  const mainSrc = resolveImagePath(img.imageDataUrl);
+                  return (
+                    <button
+                      key={img.id}
+                      onClick={() => setLightboxIndex(idx)}
+                      className="w-full rounded-lg overflow-hidden bg-gray-800 hover:ring-2 hover:ring-indigo-500 transition-all duration-200 group cursor-pointer block"
+                    >
+                      <img
+                        src={thumbSrc || mainSrc}
+                        alt={`${editedCharacter.name} #${idx + 1}`}
+                        className="w-full object-contain max-h-80 bg-gray-800 group-hover:brightness-110 transition-all duration-200"
+                        onError={(e) => {
+                          const el = e.currentTarget;
+                          if (el.src !== mainSrc && mainSrc) el.src = mainSrc;
+                          else el.style.display = 'none';
+                        }}
+                      />
+                      {img.tagIds.length > 0 && (
+                        <div className="px-2 py-1.5 flex flex-wrap gap-1">
+                          {img.tagIds.slice(0, 3).map(tid => {
+                            const t = allTags.find(tag => tag.id === tid);
+                            return t ? (
+                              <span key={tid} className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: t.color, color: '#fff' }}>
+                                {t.label}
+                              </span>
+                            ) : null;
+                          })}
+                          {img.tagIds.length > 3 && (
+                            <span className="text-[10px] text-gray-500">+{img.tagIds.length - 3}</span>
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && currentCharacterImages[lightboxIndex] && (
+        <div
+          className="fixed inset-0 bg-black/85 flex items-center justify-center z-50"
+          onClick={() => setLightboxIndex(null)}
+        >
+          <div className="relative max-w-[90vw] max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            <img
+              src={resolveImagePath(currentCharacterImages[lightboxIndex].imageDataUrl)}
+              alt={editedCharacter.name}
+              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+            />
+            <button
+              onClick={() => setLightboxIndex(null)}
+              className="absolute -top-3 -right-3 w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white shadow-lg transition-colors"
+            >
+              <CloseIcon className="w-5 h-5" />
+            </button>
+            {currentCharacterImages.length > 1 && (
+              <>
+                <button
+                  onClick={() => setLightboxIndex((lightboxIndex - 1 + currentCharacterImages.length) % currentCharacterImages.length)}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 w-10 h-10 bg-gray-800/80 hover:bg-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white shadow-lg transition-colors text-lg"
+                >
+                  ‹
+                </button>
+                <button
+                  onClick={() => setLightboxIndex((lightboxIndex + 1) % currentCharacterImages.length)}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 w-10 h-10 bg-gray-800/80 hover:bg-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white shadow-lg transition-colors text-lg"
+                >
+                  ›
+                </button>
+              </>
+            )}
+            <div className="absolute bottom-0 left-0 right-0 text-center py-2 text-sm text-gray-400">
+              {lightboxIndex + 1} / {currentCharacterImages.length}
+            </div>
+          </div>
+        </div>
+      )}
 
       <TagSelectorModal
         isOpen={isTagSelectorOpen}
