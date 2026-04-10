@@ -1251,10 +1251,16 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
                       />
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center text-white">
                         <button onClick={() => handleSetAsAvatar(img.imageDataUrl)} className="text-xs bg-indigo-600 px-2 py-1 rounded mb-1 hover:bg-indigo-700">設為頭像</button>
+                        <button onClick={() => {
+                          const updated = { ...editedCharacter, showcaseImageId: img.id };
+                          setEditedCharacter(updated);
+                          onSave(updated);
+                        }} className="text-xs bg-teal-600 px-2 py-1 rounded mb-1 hover:bg-teal-700">設為展示圖</button>
                         <button onClick={() => setEditingImageTagsFor(img)} className="text-xs bg-gray-600 px-2 py-1 rounded mb-1 hover:bg-gray-500">編輯 Tag</button>
                         <button onClick={() => handleDeleteImage(img.id)} className="text-xs bg-red-600 px-2 py-1 rounded hover:bg-red-700">刪除</button>
                       </div>
                       {editedCharacter.image === img.imageDataUrl && <div className="absolute top-1 right-1 bg-indigo-600 text-white text-xs px-1.5 py-0.5 rounded-full">頭像</div>}
+                      {editedCharacter.showcaseImageId === img.id && <div className="absolute top-1 left-1 bg-teal-600 text-white text-xs px-1.5 py-0.5 rounded-full">展示圖</div>}
                     </div>
                     );
                   })}
@@ -1403,55 +1409,33 @@ const CharacterEditorModal: React.FC<CharacterEditorModalProps> = ({
             )}
           </div>
 
-          {/* Right Panel — Character Gallery */}
-          {activeTab !== 'images' && currentCharacterImages.length > 0 && (
-            <div className="w-72 flex-shrink-0 border-l border-gray-700 flex flex-col bg-gray-900/40">
-              <div className="px-4 py-3 border-b border-gray-700 flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-gray-400" />
-                <h4 className="text-sm font-semibold text-gray-300">角色立繪</h4>
-                <span className="ml-auto text-xs text-gray-500">{currentCharacterImages.length}</span>
+          {/* Right Panel — Showcase Image */}
+          {activeTab !== 'images' && currentCharacterImages.length > 0 && (() => {
+            const showcaseImg = currentCharacterImages.find(img => img.id === editedCharacter.showcaseImageId) || currentCharacterImages[0];
+            const showcaseIdx = currentCharacterImages.indexOf(showcaseImg);
+            const mainSrc = resolveImagePath(showcaseImg.imageDataUrl);
+            return (
+              <div className="w-72 flex-shrink-0 border-l border-gray-700 flex flex-col bg-gray-900/40">
+                <div className="px-4 py-3 border-b border-gray-700 flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4 text-gray-400" />
+                  <h4 className="text-sm font-semibold text-gray-300">角色立繪</h4>
+                </div>
+                <div className="flex-1 flex items-center justify-center p-3 overflow-hidden">
+                  <button
+                    onClick={() => setLightboxIndex(showcaseIdx >= 0 ? showcaseIdx : 0)}
+                    className="w-full h-full rounded-lg overflow-hidden bg-gray-800 hover:ring-2 hover:ring-indigo-500 transition-all duration-200 group cursor-pointer flex items-center justify-center"
+                  >
+                    <img
+                      src={mainSrc}
+                      alt={editedCharacter.name}
+                      className="w-full h-full object-contain group-hover:brightness-110 transition-all duration-200"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  </button>
+                </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {currentCharacterImages.map((img, idx) => {
-                  const thumbSrc = resolveImagePath(img.thumbnailUrl);
-                  const mainSrc = resolveImagePath(img.imageDataUrl);
-                  return (
-                    <button
-                      key={img.id}
-                      onClick={() => setLightboxIndex(idx)}
-                      className="w-full rounded-lg overflow-hidden bg-gray-800 hover:ring-2 hover:ring-indigo-500 transition-all duration-200 group cursor-pointer block"
-                    >
-                      <img
-                        src={thumbSrc || mainSrc}
-                        alt={`${editedCharacter.name} #${idx + 1}`}
-                        className="w-full object-contain max-h-80 bg-gray-800 group-hover:brightness-110 transition-all duration-200"
-                        onError={(e) => {
-                          const el = e.currentTarget;
-                          if (el.src !== mainSrc && mainSrc) el.src = mainSrc;
-                          else el.style.display = 'none';
-                        }}
-                      />
-                      {img.tagIds.length > 0 && (
-                        <div className="px-2 py-1.5 flex flex-wrap gap-1">
-                          {img.tagIds.slice(0, 3).map(tid => {
-                            const t = allTags.find(tag => tag.id === tid);
-                            return t ? (
-                              <span key={tid} className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: t.color, color: '#fff' }}>
-                                {t.label}
-                              </span>
-                            ) : null;
-                          })}
-                          {img.tagIds.length > 3 && (
-                            <span className="text-[10px] text-gray-500">+{img.tagIds.length - 3}</span>
-                          )}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </div>
 

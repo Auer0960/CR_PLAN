@@ -46,6 +46,7 @@ export interface Character {
   tagIds: string[];
   image?: string; // URL or base64 data URI for avatar
   avatarPosition?: { x: number; y: number };
+  showcaseImageId?: string; // 右側展示立繪的 CharacterImage ID
   profile?: CharacterProfile;
   profileFields?: ProfileField[];
   modLog?: ModLogEntry[];
