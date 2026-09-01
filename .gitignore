@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.DS_Store
+Thumbs.db
+.env
+.env.local
+
+# Local scratch / non-project workspaces (not part of CR_PLAN app)
+_zip_compare/
+codex-work/
+_ch5_backup_before_format.txt
