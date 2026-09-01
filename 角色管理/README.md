@@ -28,7 +28,7 @@ npm run dev
 
 ### 4. 部署
 ```
-git push main
+git push origin main
 ```
 GitHub Actions 會自動 build 並部署到 GitHub Pages，不需要手動執行 `npm run deploy`（僅在自動部署失效時才手動跑）。
 
@@ -39,8 +39,8 @@ GitHub Actions 會自動 build 並部署到 GitHub Pages，不需要手動執行
 ## 💾 資料備份
 
 Repo 根目錄 `backups/` 由 GitHub Actions 每日自動從 Supabase 下載 `app_data`（約保留 30 天，另有 `latest.json`）。  
-詳見 `MEMO_維護指南.md`「每日自動備份」與「交接檢查清單」。
+詳見 `MEMO_維護指南.md`「每日自動備份」與「交接給 RD 的技術備忘」。
 
 ## 📄 其他文件
 
-維護、部署細節、交接檢查清單請見 `MEMO_維護指南.md`。
+維護、部署細節、交接備忘請見 `MEMO_維護指南.md`。

@@ -5,26 +5,17 @@
 
 ---
 
-## 交接檢查清單（給接手同事）
+## 交接給 RD 的技術備忘
 
-交接時請依序確認以下項目（文件 alone 無法涵蓋）：
+以下是 RD 接手時可能用得到、但文件 code 裡看不出來的資訊：
 
-1. **GitHub repo**：`https://github.com/Auer0960/CR_PLAN`  
-   - 邀請接手人為 Collaborator（或組織成員），才能 push / 看 Actions。
-2. **GitHub Secrets**（Settings → Secrets → Actions）需已存在：  
+1. **`.env.local` 需要的值**（已被 git 忽略，不會隨 clone 帶過去，需另外取得）：  
    - `VITE_SUPABASE_URL`  
    - `VITE_SUPABASE_PUBLISHABLE_KEY`  
-   （與本地 `.env.local` 相同一組 publishable 值）
-3. **Supabase 專案**：專案 ref `haptiezxyvrxhrcoputp`  
-   - 邀請接手人加入對應組織／專案，才能進 Dashboard 管表、Storage、RLS。  
-   - 若只有 publishable key、沒有後台權限：可以跑 App，但無法改 schema / 管使用者表。
-4. **本機 `.env.local`**：已被 git 忽略，**不會**隨 clone 帶過去。  
-   - 請私下轉交內容（或請接手人依 `.env.example` 填寫）。
-5. **稱呼查詢 MCP**（選用）：[`角色管理/.cursor/mcp.json`](.cursor/mcp.json) 內的 `cwd` 目前寫死本機路徑。  
-   - 接手人 clone 後請改成自己機器上的 `.../角色管理` 實際路徑，否則 Cursor 的 cr-address MCP 不會啟動。  
-   - 網頁側邊欄「稱呼查詢」本身仍可用（走 Vite local API），與 MCP 是兩條線。
-6. **Repo 結構注意**：唯一正式 App 目錄是根目錄下的 `角色管理/`。  
-   - 舊快照（`角色管理 - 複製`、`角色管理_上傳版`）已移除，勿再新增同名備份進 git。
+   （GitHub Actions 的 Secrets 已設定同一組值，Actions 部署不受影響）
+2. **稱呼查詢 MCP**（選用）：[`角色管理/.cursor/mcp.json`](.cursor/mcp.json) 內的 `cwd` 目前寫死本機路徑，clone 到別台機器後要改成自己的實際路徑，Cursor 的 cr-address MCP 才會啟動。  
+   - 網頁側邊欄「稱呼查詢」本身不受影響（走 Vite local API），與 MCP 是兩條線。
+3. **Repo 結構**：唯一正式 App 目錄是根目錄下的 `角色管理/`。舊的重複快照（`角色管理 - 複製`、`角色管理_上傳版`）已從 git 移除。
 
 ---
 
@@ -82,7 +73,7 @@ Repo 根目錄的 [`backups/`](../backups/) 由 GitHub Actions [`.github/workflo
 ### 日常（推薦）
 
 ```
-在 角色管理/ 改 code → git add / commit → git push main
+在 角色管理/ 改 code → git add / commit → git push origin main
 ```
 
 [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) 會在 `角色管理/` 執行 `npm ci` + `npm run build`，並把 `角色管理/dist` 推到 `deploy` 分支（GitHub Pages）。
@@ -178,7 +169,7 @@ interface Character {
 1. `types.ts` 的 `Character` 加 optional 欄位  
 2. `CharacterEditorModal.tsx` 一般資料 tab 加輸入框  
 3. 需要批次填值 → 臨時腳本  
-4. `git push main`（Actions 部署）
+4. `git push origin main`（Actions 部署）
 
 ### B. 使用者登入表
 
