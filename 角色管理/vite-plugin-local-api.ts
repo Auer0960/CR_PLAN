@@ -3,6 +3,7 @@ import path from 'path';
 import { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'http';
 import sharp from 'sharp';
+import { ensureAddressBook, listAddressBooks, upsertAddressEntry, upsertIdentityTerm } from './addressBookStore';
 
 // Define paths
 // Load environment variables manually to avoid dependency issues
@@ -163,6 +164,61 @@ export default function localApiPlugin(): Plugin {
                         res.statusCode = 500;
                         res.setHeader('Cache-Control', 'no-store');
                         res.end(JSON.stringify({ success: false, error: 'Failed to save timeline data' }));
+                    }
+                    return;
+                }
+
+                // API: address books
+                if ((url === '/api/address-books' || url === '/CR_PLAN/api/address-books') && req.method === 'GET') {
+                    try {
+                        const books = listAddressBooks();
+                        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                        res.setHeader('Cache-Control', 'no-store');
+                        res.end(JSON.stringify({ books }));
+                    } catch (error) {
+                        console.error('Error reading address books:', error);
+                        res.statusCode = 500;
+                        res.end(JSON.stringify({ error: 'Failed to read address books' }));
+                    }
+                    return;
+                }
+
+                if ((url === '/api/address-books' || url === '/CR_PLAN/api/address-books') && req.method === 'POST') {
+                    try {
+                        const body = await parseBody(req);
+                        const action = body.action || 'entry';
+                        if (action === 'ensure') {
+                            const result = ensureAddressBook(body.character);
+                            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                            res.end(JSON.stringify({ success: true, ...result }));
+                            return;
+                        }
+                        if (action === 'identity') {
+                            const result = upsertIdentityTerm(body.character, {
+                                kind: body.kind,
+                                label: body.label || (body.kind === 'canonical' ? '標準名' : body.kind === 'narration' ? '旁白' : '自稱'),
+                                terms: body.terms || [],
+                                context: body.context || '',
+                                quotes: body.quotes || [],
+                            });
+                            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                            res.end(JSON.stringify({ success: true, path: result.path, identity: result.book.identity }));
+                            return;
+                        }
+                        const result = upsertAddressEntry(body.character, body.direction, {
+                            target: body.target,
+                            nameAddress: body.nameAddress || [],
+                            pronoun: body.pronoun || [],
+                            context: body.context || '',
+                            quotes: body.quotes || [],
+                        });
+                        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                        res.end(JSON.stringify({ success: true, path: result.path }));
+                    } catch (error) {
+                        console.error('Error writing address book:', error);
+                        res.statusCode = 400;
+                        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                        res.end(JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Failed to write address book' }));
                     }
                     return;
                 }

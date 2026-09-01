@@ -1,20 +1,20 @@
 {
   "name": "角色管理",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.4.0",
   "type": "module",
   "homepage": "https://Auer0960.github.io/CR_PLAN/",
   "scripts": {
-    "dev": "node scripts/copy_user_data.js && vite --open",
-    "build": "node scripts/copy_user_data.js && vite build",
+    "dev": "vite --open",
+    "build": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist -b deploy",
-    "import:timeline:csv": "node scripts/import_cr_csv_to_timeline.mjs",
-    "migrate:supabase": "node scripts/migrate_to_supabase.mjs"
+    "mcp:address": "tsx mcp-address-server.ts"
   },
   "dependencies": {
     "@google/genai": "^1.19.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@supabase/supabase-js": "^2.98.0",
     "@types/react-virtualized-auto-sizer": "^1.0.4",
     "@types/react-window": "^1.8.8",
@@ -29,13 +29,15 @@
     "react-window": "^2.2.3",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.0",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "gh-pages": "^6.3.0",
     "sharp": "^0.34.5",
+    "tsx": "^4.23.12",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

@@ -1,25 +1,52 @@
 # CR 角色管理系統 — 維護指南 MEMO
 
-> 這份文件記錄了「如何同步資料到 Supabase 並部署到 GitHub Pages」的完整流程。
-> 每次換聊天室視窗前請確認 AI 已閱讀此文件。
+> 這份文件記錄如何維護「角色管理」App、同步資料到 Supabase，以及部署到 GitHub Pages。
+> 正式資料在 **Supabase**，不是本機 JSON。
 
 ---
 
-## 🔧 專案基本資訊
+## 交接檢查清單（給接手同事）
+
+交接時請依序確認以下項目（文件 alone 無法涵蓋）：
+
+1. **GitHub repo**：`https://github.com/Auer0960/CR_PLAN`  
+   - 邀請接手人為 Collaborator（或組織成員），才能 push / 看 Actions。
+2. **GitHub Secrets**（Settings → Secrets → Actions）需已存在：  
+   - `VITE_SUPABASE_URL`  
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`  
+   （與本地 `.env.local` 相同一組 publishable 值）
+3. **Supabase 專案**：專案 ref `haptiezxyvrxhrcoputp`  
+   - 邀請接手人加入對應組織／專案，才能進 Dashboard 管表、Storage、RLS。  
+   - 若只有 publishable key、沒有後台權限：可以跑 App，但無法改 schema / 管使用者表。
+4. **本機 `.env.local`**：已被 git 忽略，**不會**隨 clone 帶過去。  
+   - 請私下轉交內容（或請接手人依 `.env.example` 填寫）。
+5. **稱呼查詢 MCP**（選用）：[`角色管理/.cursor/mcp.json`](.cursor/mcp.json) 內的 `cwd` 目前寫死本機路徑。  
+   - 接手人 clone 後請改成自己機器上的 `.../角色管理` 實際路徑，否則 Cursor 的 cr-address MCP 不會啟動。  
+   - 網頁側邊欄「稱呼查詢」本身仍可用（走 Vite local API），與 MCP 是兩條線。
+6. **Repo 結構注意**：唯一正式 App 目錄是根目錄下的 `角色管理/`。  
+   - 舊快照（`角色管理 - 複製`、`角色管理_上傳版`）已移除，勿再新增同名備份進 git。
+
+---
+
+## 專案基本資訊
 
 | 項目 | 內容 |
 |------|------|
-| 專案路徑 | `C:\Users\Auer0960\CR\角色管理` |
-| Supabase URL | `https://haptiezxyvrxhrcoputp.supabase.co` |
-| Supabase Key | `sb_publishable_xz530eC3bqr7bhvH3Dz8Ug_SOHZeS4_` |
-| Supabase 資料表 | `app_data`（單一資料表，key='main'，欄位 `data` 存 JSON） |
-| GitHub Pages 部署分支 | `deploy` |
-| 角色資料路徑（Supabase） | `app_data.data.characters`（Array） |
-| 腳本資料夾 | `C:\Users\Auer0960\CR\角色管理\scripts\` |
+| Repo | `Auer0960/CR_PLAN`（本機通常為 `...\CR\`） |
+| App 目錄 | `角色管理/` |
+| 線上 | `https://Auer0960.github.io/CR_PLAN/` |
+| Supabase URL | 見 `.env.local` / GitHub Secrets（勿把 secret 寫進版控文件以外的聊天紀錄） |
+| 主要資料表 | `app_data`（key=`main`，`data` 存整包 App JSON） |
+| 時間軸資料表 | `timeline_data` |
+| 使用者資料表 | `users`（見 `scripts/create_users_table.sql`） |
+| 圖片 Storage | bucket `character-images` |
+| 部署分支 | `deploy`（由 Actions 推送） |
+
+環境變數請一律放在 `角色管理/.env.local`（參考 `.env.example`），不要把 publishable key 硬寫進原始碼。
 
 ---
 
-## 📦 Supabase 資料結構
+## Supabase 資料結構
 
 ```
 app_data 資料表
@@ -28,43 +55,65 @@ app_data 資料表
           characters: [ ...Character[] ],
           tagCategories: [ ...TagCategory[] ],
           relationships: [ ...Relationship[] ],
+          characterImages: [ ... ],
           glossaryTerms: [ ...GlossaryTerm[] ],
-          users: [ ...AppUser[] ]
+          ...
         }
 ```
 
 ---
 
-## 🚀 部署流程（Build + 推送 GitHub Pages）
+## 每日自動備份（`backups/`）
+
+Repo 根目錄的 [`backups/`](../backups/) 由 GitHub Actions [`.github/workflows/backup.yml`](../.github/workflows/backup.yml) 維護：
+
+- **排程**：每天 UTC 18:00（台灣時間約 02:00）；也可在 Actions 頁面手動 `workflow_dispatch`
+- **內容**：從 Supabase 抓 `app_data`（key=`main`）存成 `backups/app_data_YYYY-MM-DD.json`
+- **捷徑**：`backups/latest.json` 為最近一次成功備份
+- **保留**：只留最近約 30 天；若角色數異常（0 或看起來像暫代資料）會跳過寫入
+- **用途**：誤刪／壞資料時可對照還原到 Supabase（還原需人工用 REST / Dashboard，沒有一鍵還原腳本）
+
+這不是 App runtime 會讀的檔案；單純是營運安全網。
+
+---
+
+## 部署流程
+
+### 日常（推薦）
+
+```
+在 角色管理/ 改 code → git add / commit → git push main
+```
+
+[`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) 會在 `角色管理/` 執行 `npm ci` + `npm run build`，並把 `角色管理/dist` 推到 `deploy` 分支（GitHub Pages）。
+
+### 手動備援（Actions 失效時）
 
 ```powershell
-# 在 scripts 資料夾或專案根目錄執行：
+cd 角色管理
 npm run build
 npm run deploy
 ```
 
-- `npm run build` → 產出 `dist/` 資料夾
-- `npm run deploy` → 執行 `gh-pages -d dist -b deploy`，推送到 GitHub 的 `deploy` 分支
+- `npm run build` → 產出 `dist/`
+- `npm run deploy` → `gh-pages -d dist -b deploy`
 
 ---
 
-## 📜 Supabase 同步腳本說明
+## 批次改 Supabase 資料
 
-> **重要**：因為路徑包含中文，腳本**不能**直接用 `working_directory` 參數指定路徑。
-> 需要把腳本寫到 `C:\Users\Auer0960\sync_xxx_tmp.mjs`（無中文路徑）後執行。
-> 腳本使用 Node.js 原生 `fetch`，**不需要安裝任何 npm 套件**。
-
-### 執行方式（PowerShell）
+舊的常駐批次腳本（角色編號、一語介紹、星座 Tag、名詞匯入）已刪除。  
+若要批次改資料：在**無中文路徑**寫臨時 `.mjs`，用原生 `fetch` 打 REST API（不必裝 `@supabase/supabase-js`）。
 
 ```powershell
-node C:\Users\Auer0960\sync_xxx_tmp.mjs
+node C:\Users\你的帳號\sync_xxx_tmp.mjs
 ```
 
-### Supabase REST API 呼叫模板
+### REST 模板
 
 ```javascript
-const SUPABASE_URL = 'https://haptiezxyvrxhrcoputp.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_xz530eC3bqr7bhvH3Dz8Ug_SOHZeS4_';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL; // 或從 .env.local 複製
+const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const headers = {
   'apikey': SUPABASE_KEY,
   'Authorization': `Bearer ${SUPABASE_KEY}`,
@@ -72,15 +121,12 @@ const headers = {
   'Prefer': 'return=minimal'
 };
 
-// 讀取
 const res = await fetch(`${SUPABASE_URL}/rest/v1/app_data?key=eq.main&select=data`, { headers });
 const rows = await res.json();
 const appData = rows[0].data;
-const characters = appData.characters; // Array
 
-// 修改 characters ...
+// 修改 appData ...
 
-// 寫回
 await fetch(`${SUPABASE_URL}/rest/v1/app_data?key=eq.main`, {
   method: 'PATCH',
   headers,
@@ -88,39 +134,32 @@ await fetch(`${SUPABASE_URL}/rest/v1/app_data?key=eq.main`, {
 });
 ```
 
----
+### 什麼時候需要手動同步？
 
-## 📋 現有同步腳本清單
+| 情況 | 做法 |
+|------|------|
+| 新增 UI 欄位且要批次填既有角色 | 寫臨時腳本，或網頁上手動填 |
+| 批次改 Tag／編號／一語介紹／名詞 | 臨時腳本或網頁 |
+| 只加 UI、由使用者自己填 | 只需 push code |
+| 改資料表結構 | Supabase 後台 / SQL |
 
-### 1. `scripts/sync_codes_to_supabase.mjs`
-- **用途**：將 `CR角色列表.txt` 的角色編號（cr001 等）批次填入 Supabase `characters[].characterCode`
-- **使用 supabase-js**（需在 `角色管理` 目錄下執行）
-- 角色列表來源：`C:/Users/Auer0960/Desktop/專區/CR專案/文件/CursorAI_CR專用/CR母專案劇情資料/world_settings/CR角色列表.txt`
-
-### 2. `C:\Users\Auer0960\sync_intro_tmp.mjs`（臨時腳本）
-- **用途**：將各角色 `人物設定.md` 的「一語介紹」填入 Supabase `characters[].introduction`
-- **使用原生 fetch**（可在任意位置執行）
-- 角色設定檔來源：`C:/Users/Auer0960/Desktop/專區/CR專案/文件/CursorAI_CR專用/CR母專案劇情資料/character/[角色名]/[角色名]人物設定.md`
-- 比對方式：完整名稱 → 去除分隔符號 → 前綴比對
-
-### 3. `scripts/add_zodiac_tags.mjs`
-- **用途**：確保 Supabase `tagCategories` 中存在「星座」分類，並補上 12 星座 TAG（selectionMode='single'）
+判斷原則：code 決定 UI → push 即可；要寫進資料庫 → 需手動批次或後台。
 
 ---
 
-## 🏗 Character 資料結構（types.ts）
+## Character 資料結構（types.ts）
 
 ```typescript
 interface Character {
   id: string;
   name: string;
-  characterCode?: string;   // 角色編號，如 cr031
-  birthday?: string;        // 生日，格式 MM/DD，如 04/15 或 0415
-  title?: string;           // 稱號
-  height?: string;          // 身高，如 175cm
-  weight?: string;          // 體重，如 65kg
-  bust?: string;            // 胸圍，如 88cm
-  introduction?: string;    // 一語介紹（單行短句，從人物設定.md 的「一語介紹」欄位取得）
+  characterCode?: string;   // 如 cr031
+  birthday?: string;        // MM/DD
+  title?: string;
+  height?: string;
+  weight?: string;
+  bust?: string;
+  introduction?: string;
   notes: string;
   tagIds: string[];
   image?: string;
@@ -132,80 +171,33 @@ interface Character {
 
 ---
 
-## 🤖 GitHub Actions 自動部署
+## 常見維護任務 SOP
 
-設定檔位置：`C:\Users\Auer0960\CR\.github\workflows\deploy.yml`
+### A. 新增角色欄位
 
-**觸發條件**：push 到 `main` 分支時自動執行 build + deploy
+1. `types.ts` 的 `Character` 加 optional 欄位  
+2. `CharacterEditorModal.tsx` 一般資料 tab 加輸入框  
+3. 需要批次填值 → 臨時腳本  
+4. `git push main`（Actions 部署）
 
-**首次啟用需要**：在 GitHub 倉庫設定 Secrets（Settings → Secrets → Actions）：
-| Secret 名稱 | 值 |
-|---|---|
-| `VITE_SUPABASE_URL` | `https://haptiezxyvrxhrcoputp.supabase.co` |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_xz530eC3bqr7bhvH3Dz8Ug_SOHZeS4_` |
+### B. 使用者登入表
 
-設定完成後，日常流程只需要：
-```
-git add . → git commit → git push
-```
-GitHub 自動 build + 部署，完全不需要手動執行 `npm run deploy`。
+首次建表：在 Supabase SQL Editor 執行 `scripts/create_users_table.sql`，再於 App「設定」頁新增使用者。
 
----
+### C. 稱呼查詢
 
-## ⚡ 什麼時候需要手動執行 Supabase 同步？
-
-> AI 在以下情況應主動提醒使用者手動執行腳本。
-
-| 情況 | 需要手動的原因 | 對應腳本 |
-|------|------|------|
-| **新增角色欄位**（如 `introduction`、`birthday`）且需要批次填入現有資料 | 欄位加到 code 是自動部署的，但「填值」進資料庫要手動跑腳本 | 寫新腳本到 `C:\Users\Auer0960\xxx_tmp.mjs` |
-| **新增/修改 Tag 分類**（如新增星座分類） | Tag 資料存在 Supabase，改 code 不會動到資料 | `scripts/add_zodiac_tags.mjs` |
-| **批次更新角色編號**（characterCode） | 編號來自 `CR角色列表.txt`，需腳本比對填入 | `scripts/sync_codes_to_supabase.mjs` |
-| **批次更新一語介紹**（introduction） | 來自 `人物設定.md`，需腳本比對填入 | `C:\Users\Auer0960\sync_intro_tmp.mjs` |
-| **新增角色欄位但只是 UI 顯示**（使用者自己手動填） | 只需部署 code，不需要腳本 | 無 |
-| **修改資料表結構**（如新增 Supabase 欄位） | 需直接在 Supabase 後台或用 SQL 執行 | Supabase 後台 |
-
-### 判斷原則
-```
-問自己：「這個資料是 code 決定的，還是要往資料庫裡填的？」
-→ code 決定（UI、功能邏輯）  → push 就好，自動部署
-→ 需要填入資料庫              → 需要手動執行同步腳本
-```
+- 網頁：側邊欄「稱呼查詢」→ 本機 Vite API 讀 `CHARACTERS_DIR` 下的稱呼表 Markdown  
+- Cursor MCP：`npm run mcp:address` / `.cursor/mcp.json`（需改 `cwd`）
 
 ---
 
-## 🛠 常見維護任務 SOP
+## 注意事項
 
-### A. 新增角色欄位（如 introduction）
-
-1. 在 `types.ts` 的 `Character` interface 加入新欄位（`optional`）
-2. 在 `CharacterEditorModal.tsx` 的「一般資料」tab 加入對應輸入框
-3. 若需批次填入資料 → 寫臨時腳本到 `C:\Users\Auer0960\` 再執行
-4. `npm run build && npm run deploy`
-
-### B. 更新 Supabase 資料（批次）
-
-1. 寫腳本（使用原生 fetch，不 import 任何套件）
-2. 儲存到 `C:\Users\Auer0960\xxx_tmp.mjs`
-3. 執行：`node C:\Users\Auer0960\xxx_tmp.mjs`
-4. 確認 console 輸出無誤
-
-### C. 完整重新部署
-
-```powershell
-npm run build
-npm run deploy
-```
+1. **中文路徑**：自動化腳本若放在含中文的工作目錄外執行較穩；臨時腳本建議放純英文路徑。  
+2. **目錄外腳本找不到 node_modules**：用原生 `fetch`，不要 `import @supabase/supabase-js`。  
+3. **改資料前**：可先看 `backups/latest.json`，或自行再抓一份 JSON 備份。  
+4. **種子檔**：`public/cr_data.json`、`public/timeline_data.json` 僅在 Supabase 空資料時 fallback，日常以雲端為準。
 
 ---
 
-## ⚠️ 注意事項
-
-1. **中文路徑問題**：Shell 工具指定 `working_directory` 包含中文時會亂碼失敗。解法是把腳本放到純英文路徑執行。
-2. **腳本 import 問題**：放在 `角色管理` 目錄外的腳本找不到 `node_modules`，必須使用原生 `fetch` 而非 `@supabase/supabase-js`。
-3. **資料備份**：修改 Supabase 前若不確定，可先把 `appData` 寫到本地 JSON 檔備份。
-4. **未匹配角色**：「卡緹亞」和「李沐」目前沒有對應的人物設定.md，introduction 需手動填入。
-
----
-
-*最後更新：2026-03-13*
+*最後更新：2026-09-01*

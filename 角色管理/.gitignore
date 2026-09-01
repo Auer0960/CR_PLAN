@@ -4,3 +4,11 @@ dist/
 .env.local
 .DS_Store
 Thumbs.db
+
+# 過期本機快照／備份（正式資料在 Supabase）
+user_data.backup*.json
+*.backup.json
+備份/
+local/
+public/character_images/
+public/timeline_data.backup.json

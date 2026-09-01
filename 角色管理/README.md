@@ -1,54 +1,46 @@
 # Character Management App (角色管理)
 
-這是一個用於管理角色資料與關係圖的網頁應用程式。
+用於管理角色資料、關係圖、時間軸與圖片的內部工具。正式資料存放在 **Supabase**（雲端資料庫 + Storage），不是本機檔案。
 
-## 🚀 快速開始 (Getting Started)
+## 🚀 快速開始
 
-### 1. 安裝依賴 (Install Dependencies)
+### 1. 安裝依賴
 ```bash
 npm install
 ```
 
-### 2. 設定角色資料路徑 (Configure Data Path)
-本專案需要讀取您的角色 Markdown 檔案。
+### 2. 設定環境變數
+複製 `.env.example` 為 `.env.local`，並向團隊成員索取實際的 Supabase 專案金鑰填入：
 
-1. 複製範例設定檔：
-   ```bash
-   cp .env.example .env
-   ```
-   (或是手動建立一個 `.env` 檔案)
+```env
+VITE_SUPABASE_URL=你的 Supabase 專案 URL
+VITE_SUPABASE_PUBLISHABLE_KEY=你的 Supabase Publishable Key
+```
 
-2. 編輯 `.env` 檔案，設定 `CHARACTERS_DIR`：
+`.env.local` 已被 git 忽略，不會進版控，需要另外向團隊取得。
 
-   **方式 A：相對路徑 (推薦 - 可攜帶)**
-   如果您將角色資料資料夾放在專案目錄內 (例如 `characters` 資料夾)：
-   ```env
-   CHARACTERS_DIR=./characters
-   ```
-
-   **方式 B：絕對路徑**
-   如果您想讀取電腦上其他位置的資料：
-   ```env
-   CHARACTERS_DIR=c:/Users/YourName/Desktop/MyProject/characters
-   ```
-
-   **方式 C：搭配 CursorAI_CR專用 (您的目前設定)**
-   如果您將此專案放在 `CursorAI_CR專用` 資料夾下，與 `CR母專案劇情資料` 並列：
-   ```env
-   CHARACTERS_DIR=../CR母專案劇情資料/character
-   ```
-
-### 3. 啟動開發伺服器 (Start Dev Server)
+### 3. 啟動開發伺服器
 ```bash
 npm run dev
 ```
 
-### 4. 更新資料 (Update Data)
-當您修改了 Markdown 檔案後，執行此腳本來更新網頁資料：
-```bash
-node scripts/extract_cr_data.js
-```
+啟動後會直接從 Supabase 讀寫資料；只有在 Supabase 尚未設定或第一次沒有資料時，才會 fallback 讀取 `public/cr_data.json`、`public/timeline_data.json` 這兩份初始種子資料。
 
-## ⚠️ 注意事項
-*   **`user_data.json`**：此檔案包含您的私人設定（如 Tag、自訂關聯），預設已被 git 忽略。
-*   **`.env`**：此檔案包含您的本機路徑，預設已被 git 忽略。
+### 4. 部署
+```
+git push main
+```
+GitHub Actions 會自動 build 並部署到 GitHub Pages，不需要手動執行 `npm run deploy`（僅在自動部署失效時才手動跑）。
+
+## 📎 選用功能：稱呼查詢 / 稱呼表
+
+側邊欄「稱呼查詢」功能會讀取母專案角色資料夾內的稱呼表 Markdown 檔，需要額外設定 `CHARACTERS_DIR`（見 `.env.example`）。若不需要這個功能可以略過。
+
+## 💾 資料備份
+
+Repo 根目錄 `backups/` 由 GitHub Actions 每日自動從 Supabase 下載 `app_data`（約保留 30 天，另有 `latest.json`）。  
+詳見 `MEMO_維護指南.md`「每日自動備份」與「交接檢查清單」。
+
+## 📄 其他文件
+
+維護、部署細節、交接檢查清單請見 `MEMO_維護指南.md`。

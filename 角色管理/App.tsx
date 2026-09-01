@@ -27,6 +27,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import TimelineView from './components/TimelineView';
 import GlossaryView from './components/GlossaryView';
 import ActivityLogView from './components/ActivityLogView';
+import AddressLookupView from './components/AddressLookupView';
 
 // A helper for generating default data
 function generateDefaultData(): AppData {
@@ -1452,6 +1453,8 @@ const App: React.FC = () => {
                     onCharacterClick={handleCharacterClick}
                     currentUser={currentUser}
                 />;
+            case 'address':
+                return <AddressLookupView characters={characters} />;
             case 'activityLog':
                 return <ActivityLogView />;
             case 'settings':

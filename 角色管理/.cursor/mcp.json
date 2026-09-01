@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "cr-address": {
+      "command": "cmd",
+      "args": ["/c", "npx", "tsx", "mcp-address-server.ts"],
+      "cwd": "C:\\Users\\Auer0960\\CR\\角色管理"
+    }
+  }
+}

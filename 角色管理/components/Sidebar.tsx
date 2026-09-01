@@ -1,7 +1,7 @@
 import React from 'react';
 import type { View } from '../types';
 import type { AppUser } from '../types';
-import { GraphIcon, UsersIcon, SearchIcon, TagsIcon, SettingsIcon, ImageIcon, AnalyticsIcon, TimelineIcon, BookIcon, ActivityLogIcon } from './Icons';
+import { GraphIcon, UsersIcon, SearchIcon, TagsIcon, SettingsIcon, ImageIcon, AnalyticsIcon, TimelineIcon, BookIcon, ActivityLogIcon, AddressIcon } from './Icons';
 
 const ADMIN_CODE = '01069';
 
@@ -60,6 +60,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onSetActiveView, currentU
       </NavItem>
       <NavItem label="名詞" viewName="glossary" activeView={activeView} onClick={onSetActiveView}>
         <BookIcon className="w-6 h-6" />
+      </NavItem>
+      <NavItem label="稱呼查詢" viewName="address" activeView={activeView} onClick={onSetActiveView}>
+        <AddressIcon className="w-6 h-6" />
       </NavItem>
       <div className="flex-grow" />
       {isAdmin && (

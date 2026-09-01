@@ -124,7 +124,37 @@ export interface AiTagSuggestion {
 
 export type AiProvider = 'gemini' | 'openai';
 
-export type View = 'graph' | 'characters' | 'images' | 'search' | 'tags' | 'settings' | 'analytics' | 'timeline' | 'glossary' | 'activityLog';
+export type View = 'graph' | 'characters' | 'images' | 'search' | 'tags' | 'settings' | 'analytics' | 'timeline' | 'glossary' | 'activityLog' | 'address';
+
+export type AddressTargetKind = 'character' | 'npc' | 'generic';
+
+export interface AddressEntry {
+  target: string;
+  targetKind: AddressTargetKind;
+  nameAddress: string[];
+  pronoun: string[];
+  context: string;
+  quotes: string[];
+}
+
+export interface AddressIdentityTerm {
+  kind: 'canonical' | 'narration' | 'self';
+  label: string;
+  terms: string[];
+  context: string;
+  quotes: string[];
+}
+
+export interface AddressBook {
+  schemaVersion: number;
+  character: string;
+  characterCode?: string;
+  canonicalName?: string;
+  narrationName?: string;
+  identity: AddressIdentityTerm[];
+  outgoing: AddressEntry[];
+  incoming: AddressEntry[];
+}
 
 export interface AppData {
   characters: Character[];
