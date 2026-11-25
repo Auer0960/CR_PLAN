@@ -7,6 +7,7 @@ export interface AddressEntry {
   pronoun: string[];
   context: string;
   quotes: string[];
+  variant?: string;
 }
 
 export interface AddressIdentityTerm {
@@ -26,12 +27,26 @@ export interface AddressBook {
   identity: AddressIdentityTerm[];
   outgoing: AddressEntry[];
   incoming: AddressEntry[];
+  sns: AddressEntry[];
 }
 
 export function inferTargetKind(target: string): AddressTargetKind {
   if (target.startsWith('無特定')) return 'generic';
   if (target === '自稱') return 'npc';
   return 'character';
+}
+
+export function inferSnsVariant(context: string): string | undefined {
+  if (!context) return undefined;
+  if (context.includes('女僕造型')) return '女僕造型';
+  if (context.includes('乳牛造型')) return '乳牛造型';
+  return undefined;
+}
+
+export function entryMatchesTarget(entryTarget: string, selected: string): boolean {
+  if (!selected) return true;
+  if (entryTarget === selected) return true;
+  return entryTarget.split(/[／/]/).map(part => part.trim()).includes(selected);
 }
 
 function splitMdRow(line: string): string[] {
@@ -69,11 +84,29 @@ function parseQuotes(cell: string): string[] {
 }
 
 function extractSection(markdown: string, heading: string): string {
-  const start = markdown.search(new RegExp(`^##\\s*${heading}\\s*$`, 'm'));
+  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const start = markdown.search(new RegExp(`^##\\s*${escaped}\\s*$`, 'm'));
   if (start < 0) return '';
   const afterHeading = markdown.slice(start).replace(/^[^\n]*\n/, '');
   const next = afterHeading.search(/^##\s+/m);
   return next < 0 ? afterHeading : afterHeading.slice(0, next);
+}
+
+function extractSectionAny(markdown: string, headings: string[]): string {
+  for (const heading of headings) {
+    const section = extractSection(markdown, heading);
+    if (section) return section;
+  }
+  return '';
+}
+
+function extractSnsSection(markdown: string): string {
+  return extractSection(markdown, 'SNS／通訊') || extractSection(markdown, 'SNS/通訊');
+}
+
+function withSnsVariant(entry: AddressEntry): AddressEntry {
+  const variant = inferSnsVariant(entry.context);
+  return variant ? { ...entry, variant } : entry;
 }
 
 function tableLines(section: string): string[][] {
@@ -170,8 +203,11 @@ export function parseAddressMarkdown(markdown: string, folderName: string): Addr
   const character = titleName || folderNamePart;
   const characterCode = readMeta(markdown, '角色代碼') || (folderName.match(/^cr\d+/i)?.[0]);
 
-  let outgoing = parseTable(extractSection(markdown, '她怎麼叫別人'));
-  let incoming = parseTable(extractSection(markdown, '別人怎麼叫她'));
+  let outgoing = parseTable(extractSectionAny(markdown, ['她怎麼叫別人', '他怎麼叫別人']));
+  let incoming = parseTable(extractSectionAny(markdown, ['別人怎麼叫她', '別人怎麼叫他']));
+  const sns = parseTable(extractSnsSection(markdown))
+    .filter(entry => entry.target && entry.target !== '—')
+    .map(withSnsVariant);
   const incomingSelf = incoming.filter(entry => entry.target === '自稱');
   incoming = incoming.filter(entry => entry.target !== '自稱');
 
@@ -194,6 +230,7 @@ export function parseAddressMarkdown(markdown: string, folderName: string): Addr
     identity,
     outgoing,
     incoming,
+    sns,
   };
 }
 
@@ -211,6 +248,7 @@ export function parseAddressBookFile(content: string, filePath: string, folderNa
       identity: parsed.identity || fallbackIdentity(parsed.canonicalName || parsed.character, parsed.narrationName || parsed.character, incomingSelf),
       outgoing: parsed.outgoing || [],
       incoming: incoming.filter(entry => entry.target !== '自稱'),
+      sns: (parsed.sns || []).map(withSnsVariant),
     };
   }
   return parseAddressMarkdown(content, folderName);
@@ -249,6 +287,7 @@ export function emptyAddressBook(character: string, characterCode?: string): Add
     ],
     outgoing: [],
     incoming: [],
+    sns: [],
   };
 }
 
@@ -279,6 +318,20 @@ export function serializeAddressMarkdown(book: AddressBook): string {
     '|---|---|---|---|---|',
     ...book.incoming.map(addressRow),
     '',
+    '## SNS／通訊',
+    '',
+    '說明：聊天室我方是玩家視角；對方多稱「顧問先生」，不出現「西奧多」是正常。',
+    '',
+    ...(book.sns.length > 0
+      ? [
+          '### 她在 SNS 怎麼叫別人',
+          '',
+          '| 對象 | 名字稱呼 | 指稱 | 場合／語氣 | 台詞 |',
+          '|---|---|---|---|---|',
+          ...book.sns.map(addressRow),
+          '',
+        ]
+      : ['尚無通訊台詞。', '']),
   ];
 
   return lines.join('\n');

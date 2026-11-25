@@ -31,6 +31,14 @@ export interface AppUser {
   name: string;
 }
 
+/** 角色造型（SKIN）：名稱、註記與選填編號，不含封面圖 */
+export interface CharacterSkin {
+  id: string;
+  name: string;
+  note?: string; // 這個造型是什麼
+  code?: string; // 造型編號（選填），格式與 Character.characterCode 相同（小寫 cr + 數字），全局唯一
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -50,6 +58,7 @@ export interface Character {
   profile?: CharacterProfile;
   profileFields?: ProfileField[];
   modLog?: ModLogEntry[];
+  skins?: CharacterSkin[]; // 角色造型清單；缺失視為空陣列
 }
 
 export interface Relationship {
@@ -86,6 +95,7 @@ export interface CharacterImage {
   thumbnailUrl?: string; // Path to thumbnail image
   tagIds: string[];
   notes?: string;
+  skinId?: string; // 所屬造型 id；未設定（或找不到對應造型）即屬於「本體」
 }
 
 export interface GlossaryDraft {
@@ -135,6 +145,7 @@ export interface AddressEntry {
   pronoun: string[];
   context: string;
   quotes: string[];
+  variant?: string;
 }
 
 export interface AddressIdentityTerm {
@@ -154,6 +165,7 @@ export interface AddressBook {
   identity: AddressIdentityTerm[];
   outgoing: AddressEntry[];
   incoming: AddressEntry[];
+  sns: AddressEntry[];
 }
 
 export interface AppData {

@@ -1,12 +1,26 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { AddressBook, AddressEntry, AddressIdentityTerm, Character } from '../types';
+import { bookMatchesSpeaker, compactName, namesReferToSameCharacter, preferCharacterLabels } from '../addressNames';
+import { fetchAddressBooks } from '../dialogueQueryClient';
 import SearchableSelect from './SearchableSelect';
 import { ChevronDownIcon, SearchIcon } from './Icons';
+
+const entryMatchesTarget = (entryTarget: string, selected: string): boolean => {
+  if (!selected) return true;
+  const parts = entryTarget.split(/[／/]/).map(part => part.trim()).filter(Boolean);
+  if (parts.some(part => part === selected || namesReferToSameCharacter(part, selected))) return true;
+  return namesReferToSameCharacter(entryTarget, selected);
+};
 
 type DirectionFilter = 'outgoing' | 'incoming';
 
 interface AddressLookupViewProps {
   characters: Character[];
+  speaker: string;
+  onSpeakerChange: (value: string) => void;
+  recentStorageKey?: string;
+  /** 這個分頁看得到、而且還沒選人時，才帶入第一位。 */
+  active?: boolean;
 }
 
 interface DisplayRow extends AddressEntry {
@@ -46,30 +60,11 @@ const matchesIdentityKeyword = (term: AddressIdentityTerm, keyword: string): boo
 };
 
 const collectEntries = (books: AddressBook[], from: string, to: string): AddressEntry[] => {
-  const fromBook = books.find(book => book.character === from);
-  const toBook = books.find(book => book.character === to);
-  const outgoing = fromBook?.outgoing.filter(entry => entry.target === to) ?? [];
+  const fromBook = books.find(book => bookMatchesSpeaker(book, from));
+  const toBook = books.find(book => bookMatchesSpeaker(book, to));
+  const outgoing = fromBook?.outgoing.filter(entry => entryMatchesTarget(entry.target, to)) ?? [];
   if (outgoing.length > 0) return outgoing;
-  return toBook?.incoming.filter(entry => entry.target === from) ?? [];
-};
-
-const fetchAddressBooks = async (): Promise<AddressBook[]> => {
-  const prefix = window.location.pathname.startsWith('/CR_PLAN') ? '/CR_PLAN' : '';
-  const candidates = [`${prefix}/api/address-books`, '/api/address-books'];
-  for (const url of candidates) {
-    try {
-      const res = await fetch(url, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
-      });
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (Array.isArray(data?.books)) return data.books as AddressBook[];
-    } catch {
-      // try next
-    }
-  }
-  return [];
+  return toBook?.incoming.filter(entry => entryMatchesTarget(entry.target, from)) ?? [];
 };
 
 const AddressTable: React.FC<{
@@ -113,6 +108,13 @@ const AddressTable: React.FC<{
                   </td>
                   <td className="px-4 py-3 text-white">
                     <div>{row.target}</div>
+                    {row.variant && (
+                      <div className="text-xs mt-1">
+                        <span className="inline-block px-1.5 py-0.5 rounded bg-pink-950/80 text-pink-200 border border-pink-700/60">
+                          {row.variant}
+                        </span>
+                      </div>
+                    )}
                     {row.targetKind !== 'character' && (
                       <div className="text-xs text-gray-500 mt-1">
                         {row.targetKind === 'generic' ? '無特定對話' : 'NPC'}
@@ -212,12 +214,19 @@ const IdentityTable: React.FC<{
   );
 };
 
-const AddressLookupView: React.FC<AddressLookupViewProps> = ({ characters }) => {
+const AddressLookupView: React.FC<AddressLookupViewProps> = ({
+  characters,
+  speaker,
+  onSpeakerChange,
+  recentStorageKey,
+  active = true,
+}) => {
   const [books, setBooks] = useState<AddressBook[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [speaker, setSpeaker] = useState('');
   const [target, setTarget] = useState('');
+  const speakerRef = useRef(speaker);
+  speakerRef.current = speaker;
   const [direction, setDirection] = useState<DirectionFilter>('outgoing');
   const [keyword, setKeyword] = useState('');
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
@@ -231,11 +240,8 @@ const AddressLookupView: React.FC<AddressLookupViewProps> = ({ characters }) => 
         const loaded = await fetchAddressBooks();
         if (cancelled) return;
         setBooks(loaded);
-        if (loaded.length > 0) {
-          setSpeaker(prev => prev || loaded[0].character);
-        }
       } catch (e) {
-        if (!cancelled) setError('讀取稱呼表失敗。請確認本地 API 與角色資料夾。');
+        if (!cancelled) setError('讀取稱呼表失敗。');
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -246,18 +252,20 @@ const AddressLookupView: React.FC<AddressLookupViewProps> = ({ characters }) => 
     };
   }, []);
 
+  useEffect(() => {
+    if (!active || speakerRef.current || books.length === 0) return;
+    onSpeakerChange(books[0].character);
+  }, [active, books, onSpeakerChange]);
+
   const speakerOptions = useMemo(() => {
-    const names = new Set<string>();
-    books.forEach(book => names.add(book.character));
-    characters.forEach(character => names.add(character.name));
-    return Array.from(names)
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b, 'zh-Hant'))
-      .map(name => ({ value: name, label: name }));
+    return preferCharacterLabels(
+      characters.map(character => character.name),
+      books.map(book => book.character),
+    ).map(name => ({ value: name, label: name }));
   }, [books, characters]);
 
   const currentBook = useMemo(
-    () => books.find(book => book.character === speaker) || null,
+    () => books.find(book => bookMatchesSpeaker(book, speaker)) || null,
     [books, speaker]
   );
 
@@ -266,15 +274,18 @@ const AddressLookupView: React.FC<AddressLookupViewProps> = ({ characters }) => 
   const targetOptions = useMemo(() => {
     const names = new Set<string>();
     books.forEach(book => {
-      if (book.character === speaker) {
+      if (bookMatchesSpeaker(book, speaker)) {
         book.outgoing.forEach(entry => names.add(entry.target));
         book.incoming.forEach(entry => names.add(entry.target));
+        (book.sns || []).forEach(entry => {
+          entry.target.split(/[／/]/).map(part => part.trim()).filter(Boolean).forEach(name => names.add(name));
+        });
       }
       book.outgoing.forEach(entry => {
-        if (entry.target === speaker) names.add(book.character);
+        if (speaker && entryMatchesTarget(entry.target, speaker)) names.add(book.character);
       });
       book.incoming.forEach(entry => {
-        if (entry.target === speaker) names.add(book.character);
+        if (speaker && entryMatchesTarget(entry.target, speaker)) names.add(book.character);
       });
     });
     return Array.from(names)
@@ -310,18 +321,29 @@ const AddressLookupView: React.FC<AddressLookupViewProps> = ({ characters }) => 
     return (currentBook.identity || []).filter(term => matchesIdentityKeyword(term, keyword));
   }, [currentBook, keyword]);
 
+  const snsRows = useMemo<DisplayRow[]>(() => {
+    if (!currentBook) return [];
+    return (currentBook.sns || [])
+      .filter(entry => !isPairMode || entryMatchesTarget(entry.target, target))
+      .filter(entry => matchesKeyword(entry, keyword))
+      .map(entry => ({ ...entry, direction: 'outgoing' as const }));
+  }, [currentBook, isPairMode, target, keyword]);
+
   useEffect(() => {
     setExpandedKey(null);
   }, [speaker, direction, target, keyword]);
 
   const characterMap = useMemo(() => {
     const map = new Map<string, Character>();
-    characters.forEach(character => map.set(character.name, character));
+    characters.forEach(character => {
+      map.set(character.name, character);
+      map.set(compactName(character.name), character);
+    });
     return map;
   }, [characters]);
 
-  const speakerAvatar = resolveImagePath(characterMap.get(speaker)?.image);
-  const targetAvatar = resolveImagePath(characterMap.get(target)?.image);
+  const speakerAvatar = resolveImagePath((characterMap.get(speaker) || characterMap.get(compactName(speaker)))?.image);
+  const targetAvatar = resolveImagePath((characterMap.get(target) || characterMap.get(compactName(target)))?.image);
 
   const toggleRow = (key: string) => {
     setExpandedKey(prev => (prev === key ? null : key));
@@ -330,19 +352,16 @@ const AddressLookupView: React.FC<AddressLookupViewProps> = ({ characters }) => 
   return (
     <div className="h-full w-full bg-gray-900 flex flex-col">
       <div className="p-8 border-b border-gray-700 flex-shrink-0">
-        <h1 className="text-3xl font-bold text-white mb-2">稱呼查詢器</h1>
-        <p className="text-sm text-gray-400 mb-6">
-          查角色怎麼叫人、怎麼被叫。選了對象後會同時顯示雙向。
-        </p>
-
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <SearchableSelect
             label="說話者"
             value={speaker}
             options={speakerOptions}
             placeholder="選擇角色…"
+            allowCreate={false}
+            recentStorageKey={recentStorageKey}
             onChange={(value) => {
-              setSpeaker(value);
+              onSpeakerChange(value);
               setTarget('');
             }}
           />
@@ -352,6 +371,7 @@ const AddressLookupView: React.FC<AddressLookupViewProps> = ({ characters }) => 
               value={target}
               options={targetOptions}
               placeholder="全部對象"
+              allowCreate={false}
               onChange={setTarget}
             />
             {target && (
@@ -376,13 +396,13 @@ const AddressLookupView: React.FC<AddressLookupViewProps> = ({ characters }) => 
                   className={`flex-1 px-3 py-2 text-sm ${direction === 'outgoing' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
                   onClick={() => setDirection('outgoing')}
                 >
-                  她怎麼叫別人
+                  怎麼叫別人
                 </button>
                 <button
                   className={`flex-1 px-3 py-2 text-sm ${direction === 'incoming' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
                   onClick={() => setDirection('incoming')}
                 >
-                  別人怎麼叫她
+                  別人怎麼叫他／她
                 </button>
               </div>
             )}
@@ -488,6 +508,25 @@ const AddressLookupView: React.FC<AddressLookupViewProps> = ({ characters }) => 
               keyPrefix="list"
             />
           </>
+        )}
+
+        {currentBook && snsRows.length > 0 && (
+          <section className={isPairMode || listRows.length > 0 || identityTerms.length > 0 ? 'mt-8' : ''}>
+            <div className="mb-3 flex items-center gap-3 text-sm text-gray-400">
+              {speakerAvatar && (
+                <img src={speakerAvatar} alt={speaker} className="w-8 h-8 rounded-full object-cover border border-gray-600" />
+              )}
+              <span className="text-white">SNS／通訊</span>
+              <span className="ml-auto">{snsRows.length} 筆</span>
+            </div>
+            <AddressTable
+              rows={snsRows}
+              emptyText="沒有符合條件的 SNS 稱呼列。"
+              expandedKey={expandedKey}
+              onToggle={toggleRow}
+              keyPrefix="sns"
+            />
+          </section>
         )}
       </div>
     </div>

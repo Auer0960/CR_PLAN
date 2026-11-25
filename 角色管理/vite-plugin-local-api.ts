@@ -4,6 +4,7 @@ import { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'http';
 import sharp from 'sharp';
 import { ensureAddressBook, listAddressBooks, upsertAddressEntry, upsertIdentityTerm } from './addressBookStore';
+import { listDialogueCorpusIndex, loadDialogueCorpus } from './dialogueCorpus';
 
 // Define paths
 // Load environment variables manually to avoid dependency issues
@@ -31,9 +32,6 @@ let CHARACTERS_DIR = envConfig.CHARACTERS_DIR || 'c:/Users/Auer0960/Desktop/專�
 if (!path.isAbsolute(CHARACTERS_DIR)) {
     CHARACTERS_DIR = path.resolve(__dirname, CHARACTERS_DIR);
 }
-
-console.log(`[Local API] Using Character Data Directory: ${CHARACTERS_DIR}`);
-
 
 function parseBody(req: IncomingMessage): Promise<any> {
     return new Promise((resolve, reject) => {
@@ -164,6 +162,34 @@ export default function localApiPlugin(): Plugin {
                         res.statusCode = 500;
                         res.setHeader('Cache-Control', 'no-store');
                         res.end(JSON.stringify({ success: false, error: 'Failed to save timeline data' }));
+                    }
+                    return;
+                }
+
+                // API: dialogue corpus（台詞總表）
+                if ((url === '/api/dialogue-corpus' || url === '/CR_PLAN/api/dialogue-corpus') && req.method === 'GET') {
+                    try {
+                        const rawUrl = req.url || '';
+                        const qs = rawUrl.includes('?') ? new URL(rawUrl, 'http://localhost').searchParams : null;
+                        const character = qs?.get('character')?.trim() || '';
+                        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                        res.setHeader('Cache-Control', 'no-store');
+                        if (character) {
+                            const corpus = loadDialogueCorpus(character);
+                            if (!corpus) {
+                                res.statusCode = 404;
+                                res.end(JSON.stringify({ error: `找不到角色台詞：${character}` }));
+                                return;
+                            }
+                            res.end(JSON.stringify({ corpus }));
+                            return;
+                        }
+                        const characters = listDialogueCorpusIndex();
+                        res.end(JSON.stringify({ characters }));
+                    } catch (error) {
+                        console.error('Error reading dialogue corpus:', error);
+                        res.statusCode = 500;
+                        res.end(JSON.stringify({ error: 'Failed to read dialogue corpus' }));
                     }
                     return;
                 }

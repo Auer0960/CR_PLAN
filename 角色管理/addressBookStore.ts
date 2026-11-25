@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { nameStems } from './addressNames';
 import {
   emptyAddressBook,
   inferTargetKind,
@@ -10,7 +12,8 @@ import {
   type AddressIdentityTerm,
 } from './parseAddressBook';
 
-const envPath = path.resolve(__dirname, '.env');
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+const envPath = path.resolve(moduleDir, '.env');
 let envConfig: Record<string, string> = {};
 if (fs.existsSync(envPath)) {
   fs.readFileSync(envPath, 'utf-8').split('\n').forEach(line => {
@@ -24,7 +27,7 @@ if (fs.existsSync(envPath)) {
 export const CHARACTERS_DIR = path.isAbsolute(envConfig.CHARACTERS_DIR || '')
   ? envConfig.CHARACTERS_DIR
   : path.resolve(
-      __dirname,
+      moduleDir,
       envConfig.CHARACTERS_DIR ||
         'c:/Users/Auer0960/Desktop/專區/CR專案/文件/CursorAI_CR專用/CR母專案劇情資料/character',
     );
@@ -51,16 +54,34 @@ export function listCharacterFolders(): FolderMatch[] {
     }));
 }
 
+function folderStems(folder: string): Set<string> {
+  const label = folderLabel(folder);
+  return new Set([...nameStems(folder), ...nameStems(label)]);
+}
+
+/**
+ * 列表全名、短名、資料夾名、角色代碼都可對到同一個資料夾。
+ * 芙瑞妲・米契爾斯 → cr905_芙瑞妲；蘇妮塔・巴隆 → 蘇妮塔（沒有代碼就不加 cr 前綴）。
+ * 對到多個資料夾時不猜。
+ */
 export function findCharacterFolder(query: string): FolderMatch | null {
   const q = query.trim();
   if (!q) return null;
   const folders = listCharacterFolders();
-  const exact = folders.find(item => item.folder === q || folderLabel(item.folder) === q);
-  if (exact) return exact;
-  const code = folders.find(item => item.folder.toLowerCase().startsWith(`${q.toLowerCase()}_`) || item.folder.toLowerCase() === q.toLowerCase());
-  if (code) return code;
+  const stems = nameStems(q);
+  const stemmed = folders.filter(item => stems.some(stem => folderStems(item.folder).has(stem)));
+  if (stemmed.length === 1) return stemmed[0];
+
+  const qLower = q.toLowerCase();
+  const byCode = folders.filter(item => {
+    const folder = item.folder.toLowerCase();
+    return folder === qLower || folder.startsWith(`${qLower}_`);
+  });
+  if (byCode.length === 1) return byCode[0];
+
   const includes = folders.filter(item => item.folder.includes(q) || folderLabel(item.folder).includes(q));
-  return includes.length === 1 ? includes[0] : includes[0] || null;
+  if (includes.length === 1) return includes[0];
+  return null;
 }
 
 function bookPath(match: FolderMatch): string {

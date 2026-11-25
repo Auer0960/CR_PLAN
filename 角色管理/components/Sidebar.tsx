@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onSetActiveView, currentU
       <NavItem label="名詞" viewName="glossary" activeView={activeView} onClick={onSetActiveView}>
         <BookIcon className="w-6 h-6" />
       </NavItem>
-      <NavItem label="稱呼查詢" viewName="address" activeView={activeView} onClick={onSetActiveView}>
+      <NavItem label="台詞查詢" viewName="address" activeView={activeView} onClick={onSetActiveView}>
         <AddressIcon className="w-6 h-6" />
       </NavItem>
       <div className="flex-grow" />

@@ -2,8 +2,13 @@ node_modules/
 dist/
 .env
 .env.local
+.env.local.*
 .DS_Store
 Thumbs.db
+
+# 帳號密碼（絕對不能進 git，只放本機）
+交接密碼_請勿commit.txt
+公司部署資訊_請勿commit.txt
 
 # 過期本機快照／備份（正式資料在 Supabase）
 user_data.backup*.json
@@ -12,3 +17,7 @@ user_data.backup*.json
 local/
 public/character_images/
 public/timeline_data.backup.json
+
+# 啟動器自動下載的免安裝 Node
+launcher/node/
+launcher/node_tmp/

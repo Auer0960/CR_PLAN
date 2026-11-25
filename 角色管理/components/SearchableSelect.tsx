@@ -1,9 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDownIcon, SearchIcon } from './Icons';
+import { orderByRecent, pushRecent, readRecent } from '../recentSelect';
+import { buildVisibleOptions } from '../selectUtils';
 
 export interface SearchableSelectOption {
   value: string;
   label: string;
+  /**
+   * 額外比對（例如角色的造型）：傳入已小寫、去空白的查詢字串，
+   * 命中時回傳要顯示的命中原因（如「造型：乳牛貝兒」），沒命中回傳 null。
+   */
+  matchHint?: (query: string) => string | null;
 }
 
 interface SearchableSelectProps {
@@ -12,6 +19,13 @@ interface SearchableSelectProps {
   options: SearchableSelectOption[];
   placeholder?: string;
   onChange: (value: string) => void;
+  /** 有給 key 時，空搜尋的下拉會先排最近選過的值。 */
+  recentStorageKey?: string;
+  /**
+   * 是否允許把輸入的新字串當成值（顯示「新增：xxx」）。預設 true（地點等自由輸入欄位）。
+   * 設為 false 時只能從清單挑選：不顯示「新增」、Enter 只會選高亮的現有選項、沒有符合項目時不改變值。
+   */
+  allowCreate?: boolean;
 }
 
 const SearchableSelect: React.FC<SearchableSelectProps> = ({
@@ -20,6 +34,8 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   options,
   placeholder = '輸入或搜尋…',
   onChange,
+  recentStorageKey,
+  allowCreate = true,
 }) => {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -27,14 +43,30 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState(value || '');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [recent, setRecent] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!recentStorageKey) {
+      setRecent([]);
+      return;
+    }
+    setRecent(readRecent(localStorage, recentStorageKey));
+  }, [recentStorageKey]);
 
   useEffect(() => {
     // 關閉狀態下，輸入框顯示目前值；開啟時不強制覆蓋（避免打字中被重設）
     if (!isOpen) setQuery(value || '');
   }, [value, isOpen]);
 
+  const refreshRecent = () => {
+    if (!recentStorageKey) return;
+    setRecent(readRecent(localStorage, recentStorageKey));
+  };
+
   // 打開下拉時，預設顯示「全部選項」，不要用目前值來過濾（更像 EAGLE 的體驗）
+  // 最近搜尋存在另一個分頁也可能剛寫入，打開時重讀。
   const openDropdown = () => {
+    refreshRecent();
     setIsOpen(true);
     setQuery('');
     setActiveIndex(0);
@@ -58,10 +90,11 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     for (const opt of options) {
       if (!opt?.value?.trim()) continue;
       const key = opt.value.trim();
-      if (!map.has(key)) map.set(key, { value: key, label: opt.label?.trim() || key });
+      if (!map.has(key)) map.set(key, { value: key, label: opt.label?.trim() || key, matchHint: opt.matchHint });
     }
-    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label, 'zh-Hant'));
-  }, [options]);
+    const sorted = Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label, 'zh-Hant'));
+    return recentStorageKey ? orderByRecent(sorted, recent) : sorted;
+  }, [options, recent, recentStorageKey]);
 
   const displayLabel = useMemo(() => {
     const v = (value || '').trim();
@@ -70,28 +103,27 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     return found ? found.label : v;
   }, [value, normalizedOptions]);
 
-  const filtered = useMemo(() => {
+
+  // 只有「label 沒命中、純粹因 matchHint 命中」的選項才顯示命中原因
+  const hintFor = (opt: SearchableSelectOption): string | null => {
     const q = query.trim().toLowerCase();
-    if (!q) return normalizedOptions;
-    return normalizedOptions.filter(opt => opt.label.toLowerCase().includes(q));
-  }, [normalizedOptions, query]);
+    if (!q || !opt.matchHint || opt.label.toLowerCase().includes(q)) return null;
+    return opt.matchHint(q);
+  };
 
   const queryTrimmed = query.trim();
-  const exactExists = queryTrimmed
-    ? normalizedOptions.some(opt => opt.value.toLowerCase() === queryTrimmed.toLowerCase())
-    : false;
-
-  const showCreate = queryTrimmed.length > 0 && !exactExists;
-
-  const visibleOptions = useMemo(() => {
-    const base = filtered;
-    if (!showCreate) return base;
-    return [{ value: queryTrimmed, label: `新增：${queryTrimmed}` }, ...base];
-  }, [filtered, showCreate, queryTrimmed]);
+  // 「新增」判斷同時比對 value 與 label，避免輸入的名稱剛好等於某選項顯示名稱時還跳出新增
+  const visibleOptions = useMemo(
+    () => buildVisibleOptions(normalizedOptions, query, allowCreate),
+    [normalizedOptions, query, allowCreate]
+  );
 
   const commitValue = (v: string) => {
     const next = v.trim();
     onChange(next);
+    if (recentStorageKey && next) {
+      setRecent(pushRecent(localStorage, recentStorageKey, next));
+    }
     setIsOpen(false);
     setActiveIndex(0);
     // 讓輸入框顯示正式值
@@ -116,7 +148,8 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
       e.preventDefault();
       const picked = visibleOptions[activeIndex];
       if (picked) commitValue(picked.value);
-      else if (queryTrimmed) commitValue(queryTrimmed);
+      else if (allowCreate && queryTrimmed) commitValue(queryTrimmed);
+      // allowCreate=false 且沒有符合項目：不改變值
     } else if (e.key === 'Escape') {
       setIsOpen(false);
     }
@@ -138,6 +171,12 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
             setActiveIndex(0);
           }}
           onFocus={() => openDropdown()}
+          onBlur={(e) => {
+            // 焦點移到元件外（例如 Tab 離開）：關閉下拉，輸入框還原顯示目前正式值，不會把輸入文字當成值
+            const next = e.relatedTarget as Node | null;
+            if (next && wrapperRef.current?.contains(next)) return;
+            setIsOpen(false);
+          }}
           onKeyDown={onKeyDown}
           placeholder={displayLabel && !isOpen ? displayLabel : placeholder}
           className="w-full pl-9 pr-10 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-indigo-500"
@@ -148,7 +187,8 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
             setIsOpen(v => {
               const next = !v;
               if (next) {
-                // 打開：顯示全部選項
+                // 打開：顯示全部選項，最近搜尋排前面
+                refreshRecent();
                 setQuery('');
                 setActiveIndex(0);
                 setTimeout(() => inputRef.current?.focus(), 0);
@@ -168,7 +208,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
         {isOpen && (
           <div className="absolute z-[70] mt-1 w-full bg-gray-800 border border-gray-700 rounded shadow-xl max-h-64 overflow-y-auto custom-scrollbar">
             {visibleOptions.length === 0 ? (
-              <div className="px-3 py-2 text-sm text-gray-400">沒有符合的地點</div>
+              <div className="px-3 py-2 text-sm text-gray-400">沒有符合的選項</div>
             ) : (
               visibleOptions.map((opt, idx) => (
                 <button
@@ -184,6 +224,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
                   onClick={() => commitValue(opt.value)}
                 >
                   {opt.label}
+                  {hintFor(opt) && <span className="ml-2 text-xs text-purple-300">{hintFor(opt)}</span>}
                 </button>
               ))
             )}
